@@ -6,9 +6,9 @@ const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
 const sharp = require('sharp');
-const archiver = require('archiver'); // <-- do generowania ZIP
+const archiver = require('archiver'); // for exportPhotos
+// NEW: no new library needed for CSV, just string manipulation
 
-// Pliki / katalogi
 const DATA_FILE = path.join(__dirname, 'data.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 
@@ -16,12 +16,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-// Upewniamy się, że istnieje folder uploads
+// If uploads/ doesn’t exist, create it
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Funkcje wczytania/zapisu data.json
+// Functions to read/write data
 function loadData() {
   if (!fs.existsSync(DATA_FILE)) return [];
   return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -30,13 +30,13 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
-// Serwujemy pliki statyczne (public) i folder uploads
+// Serve static files (public + uploads)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
 
-// Konfiguracja Multer – zapisywanie oryginalnych plików
+// ------------------- File upload + thumbnail (existing) -------------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, UPLOADS_DIR);
@@ -49,7 +49,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ==================== Dodawanie zdjęć + tworzenie miniaturek ====================
 app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
   try {
     const id = parseInt(req.body.id, 10);
@@ -63,27 +62,23 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
       return res.status(404).json({ status: 'error', message: 'Nie znaleziono elementu o danym ID' });
     }
 
-    // Obsługa każdego przesłanego pliku
     for (const file of req.files) {
       const full = path.basename(file.path);
-      // Tworzymy nazwę miniatury .jpg
-      const baseName = path.parse(full).name; 
+      const baseName = path.parse(full).name;
       const thumb = 'thumb_' + baseName + '.jpg';
 
-      // Generowanie miniatury (300px szerokości)
+      // Create a 300px-wide thumbnail
       await sharp(file.path)
-        .rotate()  
+        .rotate() // auto-orient based on EXIF
         .resize({ width: 300 })
         .jpeg({ quality: 80 })
         .toFile(path.join(UPLOADS_DIR, thumb));
 
-      // Dodanie wpisu w data.json
       item.photos.push({ full, thumb });
     }
 
     saveData(data);
     io.emit('dataUpdate', data);
-
     res.json({ status: 'ok', data });
   } catch (err) {
     console.error('Błąd w /addPhotos:', err);
@@ -91,12 +86,12 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
   }
 });
 
-// ==================== Eksport zdjęć do ZIP ====================
+// ------------------- Export PHOTOS (existing from previous code) -------------------
+const archiver = require('archiver');
+
 app.get('/exportPhotos', (req, res) => {
   try {
     const data = loadData();
-
-    // Filtrujemy tylko "kompletne" (jest description + >=1 photo)
     const completeItems = data.filter(item =>
       item.description && item.description.trim() !== '' &&
       item.photos && item.photos.length > 0
@@ -106,35 +101,27 @@ app.get('/exportPhotos', (req, res) => {
       return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
     }
 
-    // Tworzymy ZIP
     const zip = archiver('zip', { zlib: { level: 9 } });
     res.setHeader('Content-Disposition', 'attachment; filename="zdjecia.zip"');
     res.setHeader('Content-Type', 'application/zip');
     zip.pipe(res);
 
-    // Będzie dodatkowy folder "miniaturki" na 1-sze zdjęcia
-    // (nie musimy go tworzyć pustego – wystarczy, że w nim umieścimy pliki)
-    
     let zIndex = 1;
     for (const item of completeItems) {
       const folderName = `Z (${zIndex})/`;
-
-      // Pełne zdjęcia w kolejności (1.jpg, 2.jpg, itp.)
       item.photos.forEach((photo, i) => {
         const fullPath = path.join(UPLOADS_DIR, photo.full);
         if (fs.existsSync(fullPath)) {
-          // Nazwa w archiwum: "Z (X)/n.jpg", gdzie n = i+1
-          const picName = `${folderName}${i + 1}.jpg`;
+          const picName = folderName + `${i + 1}.jpg`;
           zip.file(fullPath, { name: picName });
 
-          // Pierwsze zdjęcie (i=0) trafi także do "miniaturki/0 (zIndex).jpg"
+          // The first photo also goes into "miniaturki/0 (zIndex).jpg"
           if (i === 0) {
             const miniName = `miniaturki/0 (${zIndex}).jpg`;
             zip.file(fullPath, { name: miniName });
           }
         }
       });
-
       zIndex++;
     }
 
@@ -145,7 +132,55 @@ app.get('/exportPhotos', (req, res) => {
   }
 });
 
-// ============================= Socket.IO =============================
+// ------------------- NEW: Export DESCRIPTIONS to CSV -------------------
+app.get('/exportDescriptions', (req, res) => {
+  try {
+    const data = loadData();
+
+    // 1) Filter "complete" items: has description + photos
+    const completeItems = data.filter(item =>
+      item.description && item.description.trim() !== '' &&
+      item.photos && item.photos.length > 0
+    );
+    if (completeItems.length === 0) {
+      return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
+    }
+
+    // 2) Build CSV with columns: SKU, Title, Description
+    //    Start with a header row
+    let csv = 'SKU,Title,Description\n';
+
+    for (const item of completeItems) {
+      // Escape possible commas, quotes, newlines:
+      const sku = csvEscape(item.sku || '');
+      const title = csvEscape(item.title || '');
+      const desc = csvEscape(item.description || '');
+      csv += `${sku},${title},${desc}\n`;
+    }
+
+    // 3) Send as CSV download
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="opisy_complete.csv"');
+    res.send(csv);
+  } catch (err) {
+    console.error('Błąd przy eksporcie opisów:', err);
+    res.status(500).send('Błąd serwera przy eksporcie opisów.');
+  }
+});
+
+// Helper to escape CSV special chars
+function csvEscape(str) {
+  // for CSV: double-quote the field, escape internal quotes by doubling them
+  // e.g.  She said "hello" -> "She said ""hello"""
+  const needsQuoting = /[",\r\n]/.test(str);
+  let escaped = str.replace(/"/g, '""'); // double the quotes
+  if (needsQuoting) {
+    escaped = `"${escaped}"`;
+  }
+  return escaped;
+}
+
+// ------------------- Socket.IO events (existing) -------------------
 io.on('connection', (socket) => {
   console.log('Klient połączony:', socket.id);
 
@@ -234,7 +269,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// ===================== Start serwera na porcie 3000 =====================
+// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Serwer uruchomiony na porcie ${PORT}`);
