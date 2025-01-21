@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -6,8 +5,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
 const sharp = require('sharp');
-const archiver = require('archiver'); // for exportPhotos
-// NEW: no new library needed for CSV, just string manipulation
+const archiver = require('archiver'); // only once, at the top!
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -36,7 +34,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
 
-// ------------------- File upload + thumbnail (existing) -------------------
+// ------------------- File upload + thumbnail -------------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, UPLOADS_DIR);
@@ -86,9 +84,7 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
   }
 });
 
-// ------------------- Export PHOTOS (existing from previous code) -------------------
-const archiver = require('archiver');
-
+// ------------------- Export PHOTOS -------------------
 app.get('/exportPhotos', (req, res) => {
   try {
     const data = loadData();
@@ -132,12 +128,11 @@ app.get('/exportPhotos', (req, res) => {
   }
 });
 
-// ------------------- NEW: Export DESCRIPTIONS to CSV -------------------
+// ------------------- Export DESCRIPTIONS to CSV -------------------
 app.get('/exportDescriptions', (req, res) => {
   try {
     const data = loadData();
 
-    // 1) Filter "complete" items: has description + photos
     const completeItems = data.filter(item =>
       item.description && item.description.trim() !== '' &&
       item.photos && item.photos.length > 0
@@ -146,19 +141,15 @@ app.get('/exportDescriptions', (req, res) => {
       return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
     }
 
-    // 2) Build CSV with columns: SKU, Title, Description
-    //    Start with a header row
     let csv = 'SKU,Title,Description\n';
 
     for (const item of completeItems) {
-      // Escape possible commas, quotes, newlines:
       const sku = csvEscape(item.sku || '');
       const title = csvEscape(item.title || '');
       const desc = csvEscape(item.description || '');
       csv += `${sku},${title},${desc}\n`;
     }
 
-    // 3) Send as CSV download
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="opisy_complete.csv"');
     res.send(csv);
@@ -168,19 +159,16 @@ app.get('/exportDescriptions', (req, res) => {
   }
 });
 
-// Helper to escape CSV special chars
 function csvEscape(str) {
-  // for CSV: double-quote the field, escape internal quotes by doubling them
-  // e.g.  She said "hello" -> "She said ""hello"""
   const needsQuoting = /[",\r\n]/.test(str);
-  let escaped = str.replace(/"/g, '""'); // double the quotes
+  let escaped = str.replace(/"/g, '""');
   if (needsQuoting) {
     escaped = `"${escaped}"`;
   }
   return escaped;
 }
 
-// ------------------- Socket.IO events (existing) -------------------
+// ------------------- Socket.IO events -------------------
 io.on('connection', (socket) => {
   console.log('Klient połączony:', socket.id);
 
@@ -229,9 +217,9 @@ io.on('connection', (socket) => {
     item.photos = item.photos.filter(p => !(p.full === fileFull && p.thumb === fileThumb));
     saveData(data);
 
-    const fullPath = path.join(UPLOADS_DIR, fileFull);
+    const fullPath = path.join(__dirname, 'uploads', fileFull);
     if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
-    const thumbPath = path.join(UPLOADS_DIR, fileThumb);
+    const thumbPath = path.join(__dirname, 'uploads', fileThumb);
     if (fs.existsSync(thumbPath)) fs.unlinkSync(thumbPath);
 
     io.emit('dataUpdate', data);
