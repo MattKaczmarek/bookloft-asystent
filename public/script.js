@@ -98,8 +98,26 @@ document.getElementById('clear-data-button').addEventListener('click', () => {
 });
 
 document.getElementById('export-descriptions-button').addEventListener('click', async () => {
-    alert('Tu docelowo: fetch("/exportDescriptions") i pobranie pliku CSV z Node');
+    try {
+        const resp = await fetch('/exportDescriptions');
+        if (!resp.ok) {
+            alert('Błąd eksportu opisów: ' + resp.status + ' ' + resp.statusText);
+            return;
+        }
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'opisy_complete.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        alert('Błąd przy eksporcie opisów: ' + err);
+    }
 });
+
 
 // *** NAJWAŻNIEJSZA ZMIANA – obsługa eksportu zdjęć ***
 document.getElementById('export-photos-button').addEventListener('click', async () => {
