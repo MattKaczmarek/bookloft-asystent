@@ -1,0 +1,307 @@
+/* box-sizing */
+* {
+    box-sizing: border-box;
+  }
+  
+  /* Cały ekran zawsze czarny */
+  html, body {
+    background-color: #000;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Gradient (opcjonalnie) */
+  body {
+    background: linear-gradient(180deg, #000 0%, #111 100%);
+    color: #fff;
+  }
+  
+  /* Splash screen */
+  #splash-screen {
+    position: fixed;
+    inset: 0;
+    background-color: #000; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: splashFadeInOut 2s forwards;
+  }
+  
+  /* Napis BookLoft w splashu */
+  #splash-screen h1 {
+    font-size: 5rem;
+    color: #ccc;
+  }
+  
+  /* Animacja (fade in i fade out) */
+  @keyframes splashFadeInOut {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    30% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    70% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+  }
+  
+  /* Main-app początkowo niewidoczny (display: none + opacity=0) */
+  #main-app {
+    display: none; 
+    opacity: 0;
+    animation: fadeInApp 0.8s forwards;
+  }
+  
+  @keyframes fadeInApp {
+    to {
+      opacity: 1;
+    }
+  }
+  
+  /* Górny napis */
+  .app-header {
+    background: none;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #444;
+  }
+  .app-header h2 {
+    margin: 0;
+    color: #bbb;
+    font-size: 2.5rem;
+  }
+  
+  main {
+    padding: 20px;
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .counters {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+  .counters div {
+    background-color: #222;
+    padding: 4px 8px;
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+  }
+  .buttons button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+    font-size: 1rem;
+    border-radius: 4px;
+  }
+  .buttons button:hover {
+    background-color: #444;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .buttons button:active {
+    transform: scale(0.98);
+  }
+  
+  /* Tabela */
+  .table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+  }
+  #product-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #product-table th,
+  #product-table td {
+    border: 1px solid #444;
+    padding: 10px;
+    text-align: left;
+  }
+  #product-table th {
+    background-color: #222;
+    font-weight: normal;
+  }
+  #product-table tbody tr {
+    background-color: #000;
+    transition: background-color 0.3s;
+  }
+  #product-table tbody tr:hover {
+    filter: brightness(120%);
+  }
+  #product-table .column-sku {
+    width: 100px;
+     text-align: center; 
+  }
+  #product-table .column-title {
+    width: 400px;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  #product-table .column-opisy {
+    width: 450px;
+  }
+  #product-table .column-opisy textarea {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid #444;
+    background: none;
+    color: inherit;
+    margin: 0;
+    padding: 6px;
+    resize: none;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    font-size: 16px;
+    line-height: 1.4;
+    min-height: 6em;
+    border-radius: 4px;
+  }
+  #product-table .column-zdjecia {
+    width: 350px;
+  }
+  
+  /* Photo actions */
+  .photo-actions {
+    margin-bottom: 10px;
+  }
+  .photo-actions button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+    font-size: 1rem;
+    border-radius: 4px;
+  }
+  .photo-actions button:hover {
+    background-color: #444;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .photo-actions button:active {
+    transform: scale(0.98);
+  }
+  
+  /* Photo grid */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+  }
+  .photo-item {
+    position: relative;
+    border: 1px solid #444;
+    width: 100%;
+    padding-bottom: 100%;
+    overflow: hidden;
+    cursor: move;
+    border-radius: 6px;
+    transition: box-shadow 0.3s;
+  }
+  .photo-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+  .photo-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-item .remove-photo {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    background-color: rgba(255, 0, 0, 0.7);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 5px;
+    z-index: 2;
+    opacity: 0.8;
+    border-radius: 3px;
+  }
+  .photo-item .remove-photo:hover {
+    opacity: 1;
+  }
+  
+  /* Kolory wierszy */
+  #product-table tbody tr.row-empty {
+      background-color: #000 !important;
+  }
+  #product-table tbody tr.row-incomplete {
+      background-color: #202000 !important;
+  }
+  #product-table tbody tr.row-complete {
+      background-color: #001800 !important;
+  }
+  
+  /* RWD – max-width:768px */
+  @media (max-width: 768px) {
+    .table-container {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    #product-table {
+      width: 100%;
+      table-layout: fixed;
+    }
+  
+    /* Ukrywamy wszystkie przyciski i liczniki, zostaje tylko „Dodaj” */
+    #import-button,
+    #export-descriptions-button,
+    #export-photos-button,
+    #clear-data-button,
+    .counters {
+      display: none !important;
+    }
+  
+    /* Ukrywamy kolumnę opisy i miniaturki */
+    .column-opisy,
+    .photo-grid {
+      display: none !important;
+    }
+  
+    /* Szerokość SKU -> 90px, wyśrodkowanie zawartości;
+       Zdjęcia -> 100px; Tytuł -> reszta */
+    .column-sku {
+      width: 120px !important;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+      text-align: center; 
+    }
+    .column-zdjecia {
+      width: 100px !important;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    .column-title {
+      width: auto !important;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+  }
+  

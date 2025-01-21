@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>BookLoft - Asystent Zdjęć (Node + Socket.IO)</title>
 
+    <!-- PWA: manifest + theme color (opcjonalnie) -->
+    <!-- <link rel="manifest" href="manifest.json"> -->
+    <!-- <meta name="theme-color" content="#000000"> -->
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+
+    <!-- PapaParse, Sortable, JSZip - tak jak wcześniej -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
+</head>
+<body class="font-sans">
+    <!-- Ekran powitalny (splash) -->
+    <div id="splash-screen">
+        <h1>BookLoft</h1>
+    </div>
+
+    <!-- Aplikacja - początkowo niewidoczna (opacity 0 + display none w style.css) -->
+    <div id="main-app">
+        <header class="app-header">
+            <h2>BookLoft</h2>
+        </header>
+
+        <main>
+            <section class="controls">
+                <div class="buttons">
+                    <button id="import-button">Import</button>
+                    <button id="export-descriptions-button">Eksport opisów</button>
+                    <button id="export-photos-button">Eksport zdjęć</button>
+                    <button id="clear-data-button">Wyczyść dane</button>
+                    <div class="counters">
+                        <div id="counter-complete">Gotowe: 0</div>
+                        <div id="counter-incomplete">Niekompletne: 0</div>
+                        <div id="counter-total">Razem: 0</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="table-container">
+                <table id="product-table">
+                    <thead>
+                        <tr>
+                            <th class="column-sku">SKU</th>
+                            <th class="column-title">Tytuł</th>
+                            <th class="column-opisy">Opis</th>
+                            <th class="column-zdjecia">Zdjęcia</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <!-- Klient Socket.IO -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Twój plik z logiką front-endu -->
+    <script src="script.js"></script>
+</body>
+</html>
