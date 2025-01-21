@@ -72,6 +72,7 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
 
       // Generowanie miniatury (300px szerokości)
       await sharp(file.path)
+        .rotate()  
         .resize({ width: 300 })
         .jpeg({ quality: 80 })
         .toFile(path.join(UPLOADS_DIR, thumb));
