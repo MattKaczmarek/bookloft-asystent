@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>BookLoft - Asystent Zdjęć</title>
 
-    <!-- PWA: manifest + theme color (opcjonalnie) -->
-    <!-- <link rel="manifest" href="manifest.json"> -->
-    <!-- <meta name="theme-color" content="#000000"> -->
+    <!-- PWA: manifest + theme color -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
 
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
@@ -64,5 +64,14 @@
     <script src="/socket.io/socket.io.js"></script>
     <!-- Twój plik z logiką front-endu -->
     <script src="script.js"></script>
+
+    <!-- Rejestracja service workera (konieczna, by PWA działało) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(() => console.log('Service Worker zarejestrowany!'))
+          .catch(err => console.error('Błąd rejestracji SW:', err));
+      }
+    </script>
 </body>
 </html>
