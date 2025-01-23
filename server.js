@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); 
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -88,9 +88,10 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
 app.get('/exportPhotos', (req, res) => {
   try {
     const data = loadData();
+    // Eksportujemy tylko te, które mają opis + co najmniej 4 zdjęcia:
     const completeItems = data.filter(item =>
       item.description && item.description.trim() !== '' &&
-      item.photos && item.photos.length > 0
+      item.photos && item.photos.length >= 4
     );
 
     if (completeItems.length === 0) {
@@ -139,17 +140,15 @@ app.get('/exportDescriptions', (req, res) => {
     let csv = 'SKU,Title,Description\n';
 
     data.forEach(item => {
-      const hasDesc = item.description && item.description.trim() !== '';
-      const hasPhotos = item.photos && item.photos.length > 0;
-
-      // Jeśli kompletne: wypisujemy normalnie
-      if (hasDesc && hasPhotos) {
+      // "Kompletne" tylko wtedy, gdy jest opis + >=4 zdjęcia:
+      if (item.description && item.description.trim() !== '' &&
+          item.photos && item.photos.length >= 4) {
         const sku = csvEscape(item.sku || '');
         const title = csvEscape(item.title || '');
         const desc = csvEscape(item.description || '');
         csv += `${sku},${title},${desc}\n`;
       } else {
-        // Jeśli "niekompletne": zostawiamy pusty wiersz
+        // Pozostałe (żółte lub czarne) -> pusta linia
         csv += ',,\n';
       }
     });
