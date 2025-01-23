@@ -132,23 +132,27 @@ app.get('/exportPhotos', (req, res) => {
 app.get('/exportDescriptions', (req, res) => {
   try {
     const data = loadData();
-
-    const completeItems = data.filter(item =>
-      item.description && item.description.trim() !== '' &&
-      item.photos && item.photos.length > 0
-    );
-    if (completeItems.length === 0) {
-      return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
+    if (!data.length) {
+      return res.status(400).send('Brak danych – nie ma co eksportować.');
     }
 
     let csv = 'SKU,Title,Description\n';
 
-    for (const item of completeItems) {
-      const sku = csvEscape(item.sku || '');
-      const title = csvEscape(item.title || '');
-      const desc = csvEscape(item.description || '');
-      csv += `${sku},${title},${desc}\n`;
-    }
+    data.forEach(item => {
+      const hasDesc = item.description && item.description.trim() !== '';
+      const hasPhotos = item.photos && item.photos.length > 0;
+
+      // Jeśli kompletne: wypisujemy normalnie
+      if (hasDesc && hasPhotos) {
+        const sku = csvEscape(item.sku || '');
+        const title = csvEscape(item.title || '');
+        const desc = csvEscape(item.description || '');
+        csv += `${sku},${title},${desc}\n`;
+      } else {
+        // Jeśli "niekompletne": zostawiamy pusty wiersz
+        csv += ',,\n';
+      }
+    });
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="opisy_complete.csv"');
