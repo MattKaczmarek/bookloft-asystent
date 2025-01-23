@@ -1,5 +1,3 @@
-// public/script.js
-
 let socket;
 let isDataImported = false;
 
@@ -40,15 +38,19 @@ function updateCounters() {
         const photoCount = photoGrid ? photoGrid.querySelectorAll('.photo-item').length : 0;
         row.classList.remove('row-empty','row-incomplete','row-complete');
 
-        if (desc.length > 0 && photoCount > 0) {
-            complete++;
+        // Zielony (row-complete): opis + minimum 4 zdjęcia
+        if (desc.length > 0 && photoCount >= 4) {
             row.classList.add('row-complete');
-        } else if ((desc.length > 0 && photoCount === 0) ||
-                   (desc.length === 0 && photoCount > 0)) {
-            incomplete++;
-            row.classList.add('row-incomplete');
-        } else {
+            complete++;
+        }
+        // Czarny (row-empty): brak opisu i brak zdjęć
+        else if (desc.length === 0 && photoCount === 0) {
             row.classList.add('row-empty');
+        }
+        // Żółty (row-incomplete): w każdym innym wypadku
+        else {
+            row.classList.add('row-incomplete');
+            incomplete++;
         }
     });
 
@@ -118,8 +120,6 @@ document.getElementById('export-descriptions-button').addEventListener('click', 
     }
 });
 
-
-// *** NAJWAŻNIEJSZA ZMIANA – obsługa eksportu zdjęć ***
 document.getElementById('export-photos-button').addEventListener('click', async () => {
     try {
         const resp = await fetch('/exportPhotos');
@@ -265,6 +265,7 @@ async function handleAddPhotos(itemID) {
         const files = e.target.files;
         if (!files || !files.length) return;
 
+        // Sortujemy pliki po nazwie, aby trzymać kolejność
         const sorted = Array.from(files).sort((a,b) =>
             a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' })
         );
@@ -275,7 +276,7 @@ async function handleAddPhotos(itemID) {
 
         try {
             const resp = await fetch('/addPhotos', {
-                method:'POST',
+                method: 'POST',
                 body: formData
             });
             const json = await resp.json();
