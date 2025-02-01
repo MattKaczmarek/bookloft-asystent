@@ -253,10 +253,10 @@
       background-color: #000 !important;
   }
   #product-table tbody tr.row-incomplete {
-      background-color: #202000 !important;
+      background-color: #8a8a03 !important;
   }
   #product-table tbody tr.row-complete {
-      background-color: #001800 !important;
+      background-color: #035e03 !important;
   }
   
   /* RWD – max-width:768px */

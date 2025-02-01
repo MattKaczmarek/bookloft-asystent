@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); 
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -88,9 +88,10 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
 app.get('/exportPhotos', (req, res) => {
   try {
     const data = loadData();
+    // Eksportujemy tylko te, które mają opis + co najmniej 4 zdjęcia:
     const completeItems = data.filter(item =>
       item.description && item.description.trim() !== '' &&
-      item.photos && item.photos.length > 0
+      item.photos && item.photos.length >= 4
     );
 
     if (completeItems.length === 0) {
@@ -132,23 +133,25 @@ app.get('/exportPhotos', (req, res) => {
 app.get('/exportDescriptions', (req, res) => {
   try {
     const data = loadData();
-
-    const completeItems = data.filter(item =>
-      item.description && item.description.trim() !== '' &&
-      item.photos && item.photos.length > 0
-    );
-    if (completeItems.length === 0) {
-      return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
+    if (!data.length) {
+      return res.status(400).send('Brak danych – nie ma co eksportować.');
     }
 
     let csv = 'SKU,Title,Description\n';
 
-    for (const item of completeItems) {
-      const sku = csvEscape(item.sku || '');
-      const title = csvEscape(item.title || '');
-      const desc = csvEscape(item.description || '');
-      csv += `${sku},${title},${desc}\n`;
-    }
+    data.forEach(item => {
+      // "Kompletne" tylko wtedy, gdy jest opis + >=4 zdjęcia:
+      if (item.description && item.description.trim() !== '' &&
+          item.photos && item.photos.length >= 4) {
+        const sku = csvEscape(item.sku || '');
+        const title = csvEscape(item.title || '');
+        const desc = csvEscape(item.description || '');
+        csv += `${sku},${title},${desc}\n`;
+      } else {
+        // Pozostałe (żółte lub czarne) -> pusta linia
+        csv += ',,\n';
+      }
+    });
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="opisy_complete.csv"');
