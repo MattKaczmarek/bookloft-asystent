@@ -137,7 +137,6 @@ app.get('/exportDescriptions', (req, res) => {
       return res.status(400).send('Brak danych – nie ma co eksportować.');
     }
 
-    let csv = 'SKU,Title,Description\n';
 
     data.forEach(item => {
       // "Kompletne" tylko wtedy, gdy jest opis + >=4 zdjęcia:
