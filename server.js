@@ -260,6 +260,51 @@ io.on('connection', (socket) => {
   });
 });
 
+// Endpoint do dodawania miniaturki
+app.post('/addThumbnail', upload.single('photo'), async (req, res) => {
+  try {
+    const id = parseInt(req.body.id, 10);
+    if (!id) {
+      return res.status(400).json({ status: 'error', message: 'Brak ID' });
+    }
+
+    let data = loadData();
+    const item = data.find(d => d.id === id);
+    if (!item) {
+      return res.status(404).json({ status: 'error', message: 'Nie znaleziono elementu o danym ID' });
+    }
+
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ status: 'error', message: 'Brak pliku' });
+    }
+
+    const full = path.basename(file.path);
+    const baseName = path.parse(full).name;
+    const thumb = 'thumb_' + baseName + '.jpg';
+
+    // Utwórz miniaturkę (300px szerokości)
+    await sharp(file.path)
+      .rotate()
+      .resize({ width: 300 })
+      .jpeg({ quality: 80 })
+      .toFile(path.join(UPLOADS_DIR, thumb));
+
+    // Dodaj nowy obiekt zdjęcia na początek listy (jako miniaturkę)
+    if (!item.photos) item.photos = [];
+    item.photos.unshift({ full, thumb });
+
+    saveData(data);
+    io.emit('dataUpdate', data);
+    res.json({ status: 'ok', data });
+  } catch (err) {
+    console.error('Błąd w /addThumbnail:', err);
+    res.status(500).json({ status: 'error', message: 'Błąd serwera przy dodawaniu miniaturki.' });
+  }
+});
+
+
+
 // Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
