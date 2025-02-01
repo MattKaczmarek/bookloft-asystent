@@ -259,7 +259,7 @@
       background-color: #035e03 !important;
   }
   
-  /* RWD – max-width:768px */
+  /* RWD – max-width:1000px */
   @media (max-width: 1000px) {
     .table-container {
       overflow-x: auto;
@@ -272,6 +272,7 @@
   
     /* Ukrywamy wszystkie przyciski i liczniki, zostaje tylko „Dodaj” */
     #import-button,
+    #thumbnails-button  
     #export-descriptions-button,
     #export-photos-button,
     #clear-data-button,
