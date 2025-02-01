@@ -290,3 +290,58 @@ async function handleAddPhotos(itemID) {
     });
     fileInput.click();
 }
+
+// Obsługa przycisku Miniaturki
+document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
+
+async function handleThumbnails() {
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/*';
+  fileInput.multiple = true;
+
+  fileInput.addEventListener('change', async (e) => {
+    const files = e.target.files;
+    if (!files || !files.length) return;
+
+    // Pobierz wszystkie wiersze z klasą "row-complete" (gotowe pozycje)
+    const completeRows = Array.from(document.querySelectorAll('#product-table tbody tr.row-complete'));
+    
+    // Przetwarzaj każdy wybrany plik
+    for (const file of files) {
+      // Wyciągnij numer gotowej pozycji z nazwy pliku (np. "0 (7)-Photoroom")
+      const match = file.name.match(/0 \((\d+)\)-Photoroom/);
+      if (match) {
+        const targetIndex = parseInt(match[1], 10); // numer pozycji (1-based)
+        if (targetIndex <= completeRows.length) {
+          const row = completeRows[targetIndex - 1];
+          const productId = row.dataset.id;
+
+          // Przygotuj dane do wysłania
+          const formData = new FormData();
+          formData.append('id', productId);
+          formData.append('photo', file);
+
+          try {
+            const resp = await fetch('/addThumbnail', {
+              method: 'POST',
+              body: formData
+            });
+            const json = await resp.json();
+            if (json.status !== 'ok') {
+              alert(json.message || 'Błąd przy dodawaniu miniaturki.');
+            }
+          } catch (err) {
+            alert('Błąd sieci przy dodawaniu miniaturki: ' + err);
+          }
+        } else {
+          alert(`Nie znaleziono gotowej pozycji dla numeru ${targetIndex}`);
+        }
+      } else {
+        alert('Plik ' + file.name + ' ma niepoprawną nazwę.');
+      }
+    }
+  });
+
+  fileInput.click();
+}
