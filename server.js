@@ -136,24 +136,32 @@ app.get('/exportDescriptions', (req, res) => {
     if (!data.length) {
       return res.status(400).send('Brak danych – nie ma co eksportować.');
     }
-
+    
+    // Nie tworzymy wiersza nagłówkowego – eksportujemy same dane.
     let csv = '';
-
     
     data.forEach(item => {
-      // "Kompletne" tylko wtedy, gdy jest opis + >=4 zdjęcia:
+      // Produkt uznajemy za kompletny, gdy ma niepusty opis i co najmniej 4 zdjęcia.
       if (item.description && item.description.trim() !== '' &&
           item.photos && item.photos.length >= 4) {
         const sku = csvEscape(item.sku || '');
         const title = csvEscape(item.title || '');
         const desc = csvEscape(item.description || '');
-        csv += `${sku},${title},${desc}\n`;
+        let row = `${sku},${title},${desc}`;
+        
+        // Dodajemy linki do zdjęć w kolejności przechowywanej w item.photos.
+        item.photos.forEach(photo => {
+          const link = `${req.protocol}://${req.get('host')}/uploads/${photo.full}`;
+          row += `,${csvEscape(link)}`;
+        });
+        
+        csv += row + '\n';
       } else {
-        // Pozostałe (żółte lub czarne) -> pusta linia
+        // Jeśli produkt nie jest kompletny, eksportujemy pustą linię.
         csv += ',,\n';
       }
     });
-
+    
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="opisy_complete.csv"');
     res.send(csv);
