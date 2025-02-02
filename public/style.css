@@ -259,50 +259,50 @@
       background-color: #035e03 !important;
   }
   
-  /* RWD – max-width:1000px */
   @media (max-width: 1000px) {
-    .table-container {
-      overflow-x: auto;
-      max-width: 100%;
-    }
-    #product-table {
-      width: 100%;
-      table-layout: fixed;
-    }
-  
-    /* Ukrywamy wszystkie przyciski i liczniki, zostaje tylko „Dodaj” */
-    #import-button,
-    #thumbnails-button  
-    #export-descriptions-button,
-    #export-photos-button,
-    #clear-data-button,
-    .counters {
-      display: none !important;
-    }
-  
-    /* Ukrywamy kolumnę opisy i miniaturki */
-    .column-opisy,
-    .photo-grid {
-      display: none !important;
-    }
-  
-    /* Szerokość SKU -> 90px, wyśrodkowanie zawartości;
-       Zdjęcia -> 100px; Tytuł -> reszta */
-    .column-sku {
-      width: 120px !important;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-      text-align: center; 
-    }
-    .column-zdjecia {
-      width: 100px !important;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-    }
-    .column-title {
-      width: auto !important;
-      white-space: pre-wrap;
-      overflow-wrap: break-word;
-    }
+  .table-container {
+    overflow-x: auto;
+    max-width: 100%;
   }
+  #product-table {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  /* Ukrywamy wszystkie przyciski i liczniki, zostaje tylko „Dodaj” */
+  #import-button,
+  #export-descriptions-button,
+  #export-photos-button,
+  #clear-data-button,
+  #thumbnails-button,
+  .counters {
+    display: none !important;
+  }
+
+  /* Ukrywamy kolumnę opisy i miniaturki */
+  .column-opisy,
+  .photo-grid {
+    display: none !important;
+  }
+
+  /* Szerokość SKU -> 90px, wyśrodkowanie zawartości;
+     Zdjęcia -> 100px; Tytuł -> reszta */
+  .column-sku {
+    width: 120px !important;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    text-align: center; 
+  }
+  .column-zdjecia {
+    width: 100px !important;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+  .column-title {
+    width: auto !important;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+}
+
   
