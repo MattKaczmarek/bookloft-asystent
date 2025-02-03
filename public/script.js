@@ -392,7 +392,7 @@ function openImageModal(imageUrl) {
     let posY = 0;
     
     // Ustawiamy początkowy transform (brak zoomu, brak przesunięcia)
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    img.style.transform = "none";
     // Dodajemy, by obraz otwierał się w naturalnych rozmiarach
     img.style.width = 'auto';
     img.style.height = 'auto';
