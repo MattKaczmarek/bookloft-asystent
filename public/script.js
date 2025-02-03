@@ -393,7 +393,9 @@ function openImageModal(imageUrl) {
     
     // Ustawiamy początkowy transform (brak zoomu, brak przesunięcia)
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-    
+    img.style.width = 'auto';
+    img.style.height = 'auto';
+
     container.appendChild(img);
     overlay.appendChild(container);
     
