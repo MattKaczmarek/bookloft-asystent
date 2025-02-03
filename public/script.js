@@ -238,6 +238,13 @@ function createPhotoItem(photoObj, id) {
     // Pobrane z folderu uploads:
     img.src = 'uploads/' + (photoObj.thumb || photoObj.full);
 
+    // Dodaj event listener do powiększania zdjęcia
+    img.addEventListener('click', (e) => {
+        // Zapobiegamy konfliktowi z przeciąganiem
+        e.stopPropagation();
+        openImageModal('uploads/' + photoObj.full);
+    });
+
     const removeBtn = document.createElement('button');
     removeBtn.textContent = '×';
     removeBtn.classList.add('remove-photo');
@@ -266,8 +273,8 @@ async function handleAddPhotos(itemID) {
         if (!files || !files.length) return;
 
         // Sortujemy pliki po nazwie, aby trzymać kolejność
-        const sorted = Array.from(files).sort((a,b) =>
-            a.name.localeCompare(b.name, undefined, { numeric:true, sensitivity:'base' })
+        const sorted = Array.from(files).sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
         );
 
         const formData = new FormData();
@@ -344,4 +351,45 @@ async function handleThumbnails() {
   });
 
   fileInput.click();
+}
+
+// --- Funkcje modalu do powiększania zdjęć ---
+
+// Funkcja otwierająca modal z powiększonym zdjęciem
+function openImageModal(imageUrl) {
+  // Tworzymy overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'image-modal';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.zIndex = '10000';
+
+  // Tworzymy element obrazka
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.style.maxWidth = '90%';
+  img.style.maxHeight = '90%';
+  img.style.boxShadow = '0 0 20px #fff';
+
+  overlay.appendChild(img);
+
+  // Kliknięcie w overlay zamyka modal
+  overlay.addEventListener('click', closeImageModal);
+
+  document.body.appendChild(overlay);
+}
+
+// Funkcja zamykająca modal
+function closeImageModal() {
+  const overlay = document.getElementById('image-modal');
+  if (overlay) {
+    overlay.remove();
+  }
 }
