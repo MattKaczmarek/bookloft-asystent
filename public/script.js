@@ -354,7 +354,6 @@ async function handleThumbnails() {
 }
 
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
-
 function openImageModal(imageUrl) {
     // Tworzymy overlay
     const overlay = document.createElement('div');
@@ -366,9 +365,9 @@ function openImageModal(imageUrl) {
     overlay.style.height = '100%';
     overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
     overlay.style.zIndex = '10000';
-    overlay.style.display = 'flex';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
+    // Zmieniono z flex na block z overflow, aby nie narzucać skalowania
+    overlay.style.display = 'block';
+    overlay.style.overflow = 'auto';
     
     // Kontener na zdjęcie (umożliwia przesuwanie)
     const container = document.createElement('div');
@@ -376,6 +375,7 @@ function openImageModal(imageUrl) {
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
     container.style.cursor = 'grab';
+    container.style.display = 'inline-block';
     container.style.maxWidth = 'none';
     container.style.maxHeight = 'none';
     
@@ -393,9 +393,12 @@ function openImageModal(imageUrl) {
     
     // Ustawiamy początkowy transform (brak zoomu, brak przesunięcia)
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    // Dodajemy, by obraz otwierał się w naturalnych rozmiarach
     img.style.width = 'auto';
     img.style.height = 'auto';
-
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+    
     container.appendChild(img);
     overlay.appendChild(container);
     
