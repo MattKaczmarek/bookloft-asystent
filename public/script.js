@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mainApp.style.display = 'block';
     });
 
+    // Inicjujemy socket.io
     socket = io();
 
     // Gdy serwer wyśle zaktualizowane dane
@@ -375,9 +376,8 @@ function openImageModal(imageUrl) {
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
     container.style.cursor = 'grab';
-    // Usunięto ograniczenia, by obraz otwierał się w pełnym rozmiarze:
-    // container.style.maxWidth = '90%';
-    // container.style.maxHeight = '90%';
+    container.style.maxWidth = 'none';
+    container.style.maxHeight = 'none';
     
     // Tworzymy element obrazka
     const img = document.createElement('img');
