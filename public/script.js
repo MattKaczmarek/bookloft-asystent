@@ -354,3 +354,102 @@ async function handleThumbnails() {
 }
 
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
+
+function openImageModal(imageUrl) {
+  // Overlay – ustawiamy text-align, aby centrować zawartość
+  const overlay = document.createElement('div');
+  overlay.id = 'image-modal';
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+  overlay.style.zIndex = '10000';
+  overlay.style.overflow = 'auto';
+  overlay.style.textAlign = 'center'; // kluczowe – centrowanie kontenera
+
+  // Kontener – shrink-wrap, by nie rozciągał się na całą szerokość
+  const container = document.createElement('div');
+  container.id = 'modal-container';
+  container.style.position = 'relative';
+  container.style.overflow = 'visible';
+  container.style.cursor = 'grab';
+  container.style.display = 'inline-block'; // zmienione z block
+  container.style.margin = '20px 0';
+
+  // Obrazek – ustawiony bez transformacji, w naturalnych wymiarach
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.style.display = 'block';
+  img.style.position = 'relative';
+  img.style.transformOrigin = 'center center';
+  img.style.transition = 'transform 0.1s';
+  img.style.transform = 'none';
+  img.style.width = 'auto';
+  img.style.height = 'auto';
+  img.style.maxWidth = 'none';
+  img.style.maxHeight = 'none';
+
+  container.appendChild(img);
+  overlay.appendChild(container);
+
+  // Przycisk zamykania
+  const closeBtn = document.createElement('div');
+  closeBtn.textContent = '×';
+  closeBtn.style.position = 'absolute';
+  closeBtn.style.top = '20px';
+  closeBtn.style.right = '20px';
+  closeBtn.style.fontSize = '30px';
+  closeBtn.style.color = '#fff';
+  closeBtn.style.cursor = 'pointer';
+  closeBtn.style.zIndex = '10001';
+  overlay.appendChild(closeBtn);
+
+  closeBtn.addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  // Mechanizm zoom i przesuwania – aktywowany przy interakcji
+  let scale = 1;
+  let posX = 0;
+  let posY = 0;
+
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+    scale = Math.min(Math.max(0.5, scale + delta), 5);
+    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+  });
+
+  let isPanning = false;
+  let startX = 0;
+  let startY = 0;
+
+  container.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    isPanning = true;
+    startX = e.clientX - posX;
+    startY = e.clientY - posY;
+    container.style.cursor = 'grabbing';
+  });
+
+  container.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    posX = e.clientX - startX;
+    posY = e.clientY - startY;
+    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+  });
+
+  container.addEventListener('mouseup', () => {
+    isPanning = false;
+    container.style.cursor = 'grab';
+  });
+  container.addEventListener('mouseleave', () => {
+    isPanning = false;
+    container.style.cursor = 'grab';
+  });
+
+  document.body.appendChild(overlay);
+}
+
