@@ -356,7 +356,7 @@ async function handleThumbnails() {
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
 function openImageModal(imageUrl) {
-  // Tworzymy overlay z flexbox
+  // Tworzymy overlay jako flex-container
   const overlay = document.createElement('div');
   overlay.id = 'image-modal';
   overlay.style.position = 'fixed';
@@ -371,13 +371,11 @@ function openImageModal(imageUrl) {
   overlay.style.alignItems = 'center';
   overlay.style.overflow = 'auto';
 
-  // Kontener, który przyjmie naturalne rozmiary obrazka
+  // Kontener – shrink-wrap
   const container = document.createElement('div');
   container.id = 'modal-container';
   container.style.position = 'relative';
   container.style.display = 'inline-block';
-  container.style.width = 'auto';
-  container.style.height = 'auto';
   container.style.cursor = 'grab';
 
   // Element obrazka – ustawiony bez transformacji na starcie
@@ -387,6 +385,7 @@ function openImageModal(imageUrl) {
   img.style.position = 'relative';
   img.style.transformOrigin = 'center center';
   img.style.transition = 'transform 0.1s';
+  // Ustawiamy brak transformacji na starcie
   img.style.transform = 'none';
   img.style.width = 'auto';
   img.style.height = 'auto';
@@ -396,7 +395,7 @@ function openImageModal(imageUrl) {
   container.appendChild(img);
   overlay.appendChild(container);
 
-  // Przycisk zamykania (krzyżyk)
+  // Przycisk zamykania
   const closeBtn = document.createElement('div');
   closeBtn.textContent = '×';
   closeBtn.style.position = 'absolute';
@@ -409,10 +408,23 @@ function openImageModal(imageUrl) {
   overlay.appendChild(closeBtn);
   closeBtn.addEventListener('click', () => overlay.remove());
 
-  // Mechanizm zoom i pan – startujemy z scale = 1, bez przesunięcia
+  // Początkowe wartości zoomu i przesunięcia
   let scale = 1;
   let posX = 0, posY = 0;
 
+  // Po załadowaniu obrazu obliczamy skalę, żeby obraz zmieścił się w viewportie
+  img.onload = function() {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+    // Jeśli obraz jest większy od viewportu, ustawiamy scale < 1, w przeciwnym razie 1
+    const initialScale = Math.min(1, vw / nw, vh / nh);
+    scale = initialScale;
+    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+  };
+
+  // Zoomowanie przy użyciu scrolla – nie pozwalamy scale spaść poniżej 1
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.1 : -0.1;
@@ -420,6 +432,7 @@ function openImageModal(imageUrl) {
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
   });
 
+  // Przesuwanie (pan)
   let isPanning = false;
   let startX = 0, startY = 0;
   container.addEventListener('mousedown', (e) => {
@@ -446,4 +459,5 @@ function openImageModal(imageUrl) {
 
   document.body.appendChild(overlay);
 }
+
 
