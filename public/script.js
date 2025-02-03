@@ -356,7 +356,7 @@ async function handleThumbnails() {
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
 function openImageModal(imageUrl) {
-  // Overlay – ustawiamy text-align, aby centrować zawartość
+  // Tworzymy overlay jako flex-container
   const overlay = document.createElement('div');
   overlay.id = 'image-modal';
   overlay.style.position = 'fixed';
@@ -366,25 +366,28 @@ function openImageModal(imageUrl) {
   overlay.style.height = '100%';
   overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
   overlay.style.zIndex = '10000';
+  overlay.style.display = 'flex';
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
   overlay.style.overflow = 'auto';
-  overlay.style.textAlign = 'center'; // kluczowe – centrowanie kontenera
 
-  // Kontener – shrink-wrap, by nie rozciągał się na całą szerokość
+  // Kontener – pozwala przyjąć naturalny rozmiar obrazka
   const container = document.createElement('div');
   container.id = 'modal-container';
   container.style.position = 'relative';
-  container.style.overflow = 'visible';
+  container.style.overflow = 'hidden';
   container.style.cursor = 'grab';
-  container.style.display = 'inline-block'; // zmienione z block
-  container.style.margin = '20px 0';
+  // Nie ustalamy width/height – kontener przyjmie rozmiar obrazka
+  container.style.display = 'inline-block';
 
-  // Obrazek – ustawiony bez transformacji, w naturalnych wymiarach
+  // Element obrazka
   const img = document.createElement('img');
   img.src = imageUrl;
   img.style.display = 'block';
   img.style.position = 'relative';
   img.style.transformOrigin = 'center center';
   img.style.transition = 'transform 0.1s';
+  // Brak transformacji na starcie – obraz ma być naturalny
   img.style.transform = 'none';
   img.style.width = 'auto';
   img.style.height = 'auto';
@@ -394,7 +397,7 @@ function openImageModal(imageUrl) {
   container.appendChild(img);
   overlay.appendChild(container);
 
-  // Przycisk zamykania
+  // Przycisk zamykania – umieszczony w prawym górnym rogu overlay
   const closeBtn = document.createElement('div');
   closeBtn.textContent = '×';
   closeBtn.style.position = 'absolute';
@@ -405,27 +408,22 @@ function openImageModal(imageUrl) {
   closeBtn.style.cursor = 'pointer';
   closeBtn.style.zIndex = '10001';
   overlay.appendChild(closeBtn);
+  closeBtn.addEventListener('click', () => overlay.remove());
 
-  closeBtn.addEventListener('click', () => {
-    overlay.remove();
-  });
-
-  // Mechanizm zoom i przesuwania – aktywowany przy interakcji
+  // Mechanizm zoom i pan – zaczynamy od scale = 1 (brak zoomu)
   let scale = 1;
-  let posX = 0;
-  let posY = 0;
+  let posX = 0, posY = 0;
 
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
+    // Nie pozwalamy zmniejszyć poniżej naturalnego rozmiaru (scale >= 1)
     const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    scale = Math.min(Math.max(0.5, scale + delta), 5);
+    scale = Math.min(Math.max(1, scale + delta), 5);
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
   });
 
   let isPanning = false;
-  let startX = 0;
-  let startY = 0;
-
+  let startX = 0, startY = 0;
   container.addEventListener('mousedown', (e) => {
     e.preventDefault();
     isPanning = true;
@@ -433,14 +431,12 @@ function openImageModal(imageUrl) {
     startY = e.clientY - posY;
     container.style.cursor = 'grabbing';
   });
-
   container.addEventListener('mousemove', (e) => {
     if (!isPanning) return;
     posX = e.clientX - startX;
     posY = e.clientY - startY;
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
   });
-
   container.addEventListener('mouseup', () => {
     isPanning = false;
     container.style.cursor = 'grab';
