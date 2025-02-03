@@ -302,94 +302,156 @@ async function handleAddPhotos(itemID) {
 document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
 
 async function handleThumbnails() {
-  const fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/*';
-  fileInput.multiple = true;
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.multiple = true;
 
-  fileInput.addEventListener('change', async (e) => {
-    const files = e.target.files;
-    if (!files || !files.length) return;
+    fileInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (!files || !files.length) return;
 
-    // Pobierz wszystkie wiersze z klasą "row-complete" (gotowe pozycje)
-    const completeRows = Array.from(document.querySelectorAll('#product-table tbody tr.row-complete'));
-    
-    // Przetwarzaj każdy wybrany plik
-    for (const file of files) {
-      // Wyciągnij numer gotowej pozycji z nazwy pliku (np. "0 (7)-Photoroom")
-      const match = file.name.match(/0 \((\d+)\)-Photoroom/);
-      if (match) {
-        const targetIndex = parseInt(match[1], 10); // numer pozycji (1-based)
-        if (targetIndex <= completeRows.length) {
-          const row = completeRows[targetIndex - 1];
-          const productId = row.dataset.id;
+        // Pobierz wszystkie wiersze z klasą "row-complete" (gotowe pozycje)
+        const completeRows = Array.from(document.querySelectorAll('#product-table tbody tr.row-complete'));
+        
+        // Przetwarzaj każdy wybrany plik
+        for (const file of files) {
+            // Wyciągnij numer gotowej pozycji z nazwy pliku (np. "0 (7)-Photoroom")
+            const match = file.name.match(/0 \((\d+)\)-Photoroom/);
+            if (match) {
+                const targetIndex = parseInt(match[1], 10); // numer pozycji (1-based)
+                if (targetIndex <= completeRows.length) {
+                    const row = completeRows[targetIndex - 1];
+                    const productId = row.dataset.id;
 
-          // Przygotuj dane do wysłania
-          const formData = new FormData();
-          formData.append('id', productId);
-          formData.append('photo', file);
+                    // Przygotuj dane do wysłania
+                    const formData = new FormData();
+                    formData.append('id', productId);
+                    formData.append('photo', file);
 
-          try {
-            const resp = await fetch('/addThumbnail', {
-              method: 'POST',
-              body: formData
-            });
-            const json = await resp.json();
-            if (json.status !== 'ok') {
-              alert(json.message || 'Błąd przy dodawaniu miniaturki.');
+                    try {
+                        const resp = await fetch('/addThumbnail', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const json = await resp.json();
+                        if (json.status !== 'ok') {
+                            alert(json.message || 'Błąd przy dodawaniu miniaturki.');
+                        }
+                    } catch (err) {
+                        alert('Błąd sieci przy dodawaniu miniaturki: ' + err);
+                    }
+                } else {
+                    alert(`Nie znaleziono gotowej pozycji dla numeru ${targetIndex}`);
+                }
+            } else {
+                alert('Plik ' + file.name + ' ma niepoprawną nazwę.');
             }
-          } catch (err) {
-            alert('Błąd sieci przy dodawaniu miniaturki: ' + err);
-          }
-        } else {
-          alert(`Nie znaleziono gotowej pozycji dla numeru ${targetIndex}`);
         }
-      } else {
-        alert('Plik ' + file.name + ' ma niepoprawną nazwę.');
-      }
-    }
-  });
+    });
 
-  fileInput.click();
+    fileInput.click();
 }
 
-// --- Funkcje modalu do powiększania zdjęć ---
+// --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
-// Funkcja otwierająca modal z powiększonym zdjęciem
 function openImageModal(imageUrl) {
-  // Tworzymy overlay
-  const overlay = document.createElement('div');
-  overlay.id = 'image-modal';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-  overlay.style.display = 'flex';
-  overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
-  overlay.style.zIndex = '10000';
-
-  // Tworzymy element obrazka
-  const img = document.createElement('img');
-  img.src = imageUrl;
-  img.style.maxWidth = '90%';
-  img.style.maxHeight = '90%';
-  img.style.boxShadow = '0 0 20px #fff';
-
-  overlay.appendChild(img);
-
-  // Kliknięcie w overlay zamyka modal
-  overlay.addEventListener('click', closeImageModal);
-
-  document.body.appendChild(overlay);
-}
-
-// Funkcja zamykająca modal
-function closeImageModal() {
-  const overlay = document.getElementById('image-modal');
-  if (overlay) {
-    overlay.remove();
-  }
+    // Tworzymy overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'image-modal';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overlay.style.zIndex = '10000';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    
+    // Kontener na zdjęcie (umożliwia przesuwanie)
+    const container = document.createElement('div');
+    container.id = 'modal-container';
+    container.style.position = 'relative';
+    container.style.overflow = 'hidden';
+    container.style.cursor = 'grab';
+    container.style.maxWidth = '90%';
+    container.style.maxHeight = '90%';
+    
+    // Tworzymy element obrazka
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.position = 'relative';
+    img.style.transformOrigin = 'center center';
+    img.style.transition = 'transform 0.1s';
+    
+    // Inicjalne wartości zoomu i przesunięcia
+    let scale = 1;
+    let posX = 0;
+    let posY = 0;
+    
+    // Ustawiamy początkowy transform
+    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    
+    container.appendChild(img);
+    overlay.appendChild(container);
+    
+    // Przycisk zamykania
+    const closeBtn = document.createElement('div');
+    closeBtn.textContent = '×';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '20px';
+    closeBtn.style.right = '20px';
+    closeBtn.style.fontSize = '30px';
+    closeBtn.style.color = '#fff';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.zIndex = '10001';
+    overlay.appendChild(closeBtn);
+    
+    closeBtn.addEventListener('click', () => {
+        overlay.remove();
+    });
+    
+    // Zmienna do śledzenia przesuwania
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+    
+    // Zoomowanie przy użyciu scrolla
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        scale = Math.min(Math.max(0.5, scale + delta), 5);
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    });
+    
+    // Rozpoczęcie przesuwania
+    container.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isPanning = true;
+        startX = e.clientX - posX;
+        startY = e.clientY - posY;
+        container.style.cursor = 'grabbing';
+    });
+    
+    // Przesuwanie
+    container.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        posX = e.clientX - startX;
+        posY = e.clientY - startY;
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    });
+    
+    // Zakończenie przesuwania
+    container.addEventListener('mouseup', () => {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+    container.addEventListener('mouseleave', () => {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+    
+    document.body.appendChild(overlay);
 }
