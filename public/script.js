@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mainApp.style.display = 'block';
     });
 
-    // Inicjujemy socket.io
     socket = io();
 
     // Gdy serwer wyśle zaktualizowane dane
