@@ -376,8 +376,9 @@ function openImageModal(imageUrl) {
     container.style.position = 'relative';
     container.style.overflow = 'hidden';
     container.style.cursor = 'grab';
-    container.style.maxWidth = '90%';
-    container.style.maxHeight = '90%';
+    // Usunięto ograniczenia, by obraz otwierał się w pełnym rozmiarze:
+    // container.style.maxWidth = '90%';
+    // container.style.maxHeight = '90%';
     
     // Tworzymy element obrazka
     const img = document.createElement('img');
@@ -386,18 +387,18 @@ function openImageModal(imageUrl) {
     img.style.transformOrigin = 'center center';
     img.style.transition = 'transform 0.1s';
     
-    // Inicjalne wartości zoomu i przesunięcia
+    // Inicjalne wartości – bez zoomu
     let scale = 1;
     let posX = 0;
     let posY = 0;
     
-    // Ustawiamy początkowy transform
+    // Ustawiamy początkowy transform (brak zoomu, brak przesunięcia)
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
     
     container.appendChild(img);
     overlay.appendChild(container);
     
-    // Przycisk zamykania
+    // Przycisk zamykania (krzyżyk)
     const closeBtn = document.createElement('div');
     closeBtn.textContent = '×';
     closeBtn.style.position = 'absolute';
