@@ -356,7 +356,7 @@ async function handleThumbnails() {
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
 function openImageModal(imageUrl) {
-  // Tworzymy overlay jako flex-container
+  // Tworzymy overlay z flexbox
   const overlay = document.createElement('div');
   overlay.id = 'image-modal';
   overlay.style.position = 'fixed';
@@ -371,23 +371,22 @@ function openImageModal(imageUrl) {
   overlay.style.alignItems = 'center';
   overlay.style.overflow = 'auto';
 
-  // Kontener – pozwala przyjąć naturalny rozmiar obrazka
+  // Kontener, który przyjmie naturalne rozmiary obrazka
   const container = document.createElement('div');
   container.id = 'modal-container';
   container.style.position = 'relative';
-  container.style.overflow = 'hidden';
-  container.style.cursor = 'grab';
-  // Nie ustalamy width/height – kontener przyjmie rozmiar obrazka
   container.style.display = 'inline-block';
+  container.style.width = 'auto';
+  container.style.height = 'auto';
+  container.style.cursor = 'grab';
 
-  // Element obrazka
+  // Element obrazka – ustawiony bez transformacji na starcie
   const img = document.createElement('img');
   img.src = imageUrl;
   img.style.display = 'block';
   img.style.position = 'relative';
   img.style.transformOrigin = 'center center';
   img.style.transition = 'transform 0.1s';
-  // Brak transformacji na starcie – obraz ma być naturalny
   img.style.transform = 'none';
   img.style.width = 'auto';
   img.style.height = 'auto';
@@ -397,7 +396,7 @@ function openImageModal(imageUrl) {
   container.appendChild(img);
   overlay.appendChild(container);
 
-  // Przycisk zamykania – umieszczony w prawym górnym rogu overlay
+  // Przycisk zamykania (krzyżyk)
   const closeBtn = document.createElement('div');
   closeBtn.textContent = '×';
   closeBtn.style.position = 'absolute';
@@ -410,13 +409,12 @@ function openImageModal(imageUrl) {
   overlay.appendChild(closeBtn);
   closeBtn.addEventListener('click', () => overlay.remove());
 
-  // Mechanizm zoom i pan – zaczynamy od scale = 1 (brak zoomu)
+  // Mechanizm zoom i pan – startujemy z scale = 1, bez przesunięcia
   let scale = 1;
   let posX = 0, posY = 0;
 
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
-    // Nie pozwalamy zmniejszyć poniżej naturalnego rozmiaru (scale >= 1)
     const delta = e.deltaY < 0 ? 0.1 : -0.1;
     scale = Math.min(Math.max(1, scale + delta), 5);
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
