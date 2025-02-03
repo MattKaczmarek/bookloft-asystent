@@ -385,7 +385,6 @@ function openImageModal(imageUrl) {
   img.style.position = 'relative';
   img.style.transformOrigin = 'center center';
   img.style.transition = 'transform 0.1s';
-  // Ustawiamy brak transformacji na starcie
   img.style.transform = 'none';
   img.style.width = 'auto';
   img.style.height = 'auto';
@@ -410,6 +409,7 @@ function openImageModal(imageUrl) {
 
   // Początkowe wartości zoomu i przesunięcia
   let scale = 1;
+  let minScale = 1;
   let posX = 0, posY = 0;
 
   // Po załadowaniu obrazu obliczamy skalę, żeby obraz zmieścił się w viewportie
@@ -418,17 +418,17 @@ function openImageModal(imageUrl) {
     const vh = window.innerHeight;
     const nw = img.naturalWidth;
     const nh = img.naturalHeight;
-    // Jeśli obraz jest większy od viewportu, ustawiamy scale < 1, w przeciwnym razie 1
     const initialScale = Math.min(1, vw / nw, vh / nh);
     scale = initialScale;
+    minScale = initialScale;
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
   };
 
-  // Zoomowanie przy użyciu scrolla – nie pozwalamy scale spaść poniżej 1
+  // Zoomowanie przy użyciu scrolla – nie pozwalamy scale spaść poniżej minScale
   container.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    scale = Math.min(Math.max(1, scale + delta), 5);
+    scale = Math.min(Math.max(minScale, scale + delta), 5);
     img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
   });
 
