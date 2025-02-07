@@ -355,18 +355,18 @@ main {
 
 /* Stylizacja logo w nagłówku */
 .app-logo {
-  max-height: 80px;
+  max-height: 500px;
   height: auto;
   display: block;
   margin: 0 auto;
 }
 
 /* Mobile adjustments */
-@media (max-width: 600px) {
+@media (max-width: 800px) {
   .splash-logo {
-    max-width: 90%;
+    max-width: 140%;
   }
   .app-logo {
-    max-height: 100px;
+    max-height: 150px;
   }
 }
