@@ -355,7 +355,7 @@ main {
 
 /* Stylizacja logo w nagłówku */
 .app-logo {
-  max-height: 500px;
+  max-height: 180px;
   height: auto;
   display: block;
   margin: 0 auto;
