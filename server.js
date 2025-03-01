@@ -69,7 +69,7 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
       await sharp(file.path)
         .rotate() // auto-orient based on EXIF
         .resize({ width: 300 })
-        .jpeg({ quality: 70, progressive: true })
+        .jpeg({ quality: 80 })
         .toFile(path.join(UPLOADS_DIR, thumb));
 
       item.photos.push({ full, thumb });
@@ -296,7 +296,7 @@ app.post('/addThumbnail', upload.single('photo'), async (req, res) => {
     await sharp(file.path)
       .rotate()
       .resize({ width: 300 })
-      .jpeg({ quality: 70, progressive: true })
+      .jpeg({ quality: 80 })
       .toFile(path.join(UPLOADS_DIR, thumb));
 
     // Dodaj nowy obiekt zdjęcia na początek listy (jako miniaturkę)
