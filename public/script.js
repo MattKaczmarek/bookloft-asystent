@@ -2,14 +2,6 @@ let socket;
 let isDataImported = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const splash = document.getElementById('splash-screen');
-    const mainApp = document.getElementById('main-app');
-
-    splash.addEventListener('animationend', () => {
-        splash.style.display = 'none';
-        mainApp.style.display = 'block';
-    });
-
     // Inicjujemy socket.io
     socket = io();
 
@@ -36,7 +28,7 @@ function updateCounters() {
         const desc = (row.querySelector('textarea')?.value || '').trim();
         const photoGrid = row.querySelector('.photo-grid');
         const photoCount = photoGrid ? photoGrid.querySelectorAll('.photo-item').length : 0;
-        row.classList.remove('row-empty','row-incomplete','row-complete');
+        row.classList.remove('row-empty', 'row-incomplete', 'row-complete');
 
         // Zielony (row-complete): opis + minimum 4 zdjęcia
         if (desc.length > 0 && photoCount >= 4) {
@@ -90,7 +82,7 @@ document.getElementById('import-button').addEventListener('click', () => {
 
 document.getElementById('clear-data-button').addEventListener('click', () => {
     if (!confirm('Czy na pewno chcesz wyczyścić dane?')) return;
-    const pin = prompt('Aby wyczyścić dane, wpisz PIN (8892):');
+    const pin = prompt('Aby wyczyść dane, wpisz PIN (8892):');
     if (pin !== '8892') {
         alert('Niepoprawny PIN!');
         return;
@@ -245,18 +237,18 @@ function createPhotoItem(photoObj, id) {
         openImageModal('uploads/' + photoObj.full);
     });
 
-   const removeBtn = document.createElement('button');
-removeBtn.textContent = '×';
-removeBtn.classList.add('remove-photo');
-removeBtn.addEventListener('click', () => {
-    if (confirm("Czekaj kurwa... na pewno chcesz to zrobić?")) {
-        socket.emit('removePhoto', {
-            id: parseInt(id, 10),
-            fileFull: photoObj.full,
-            fileThumb: photoObj.thumb
-        });
-    }
-});
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '×';
+    removeBtn.classList.add('remove-photo');
+    removeBtn.addEventListener('click', () => {
+        if (confirm("Czekaj kurwa... na pewno chcesz to zrobić?")) {
+            socket.emit('removePhoto', {
+                id: parseInt(id, 10),
+                fileFull: photoObj.full,
+                fileThumb: photoObj.thumb
+            });
+        }
+    });
 
     item.appendChild(removeBtn);
     item.appendChild(img);
@@ -461,5 +453,3 @@ function openImageModal(imageUrl) {
 
   document.body.appendChild(overlay);
 }
-
-
