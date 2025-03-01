@@ -5,16 +5,10 @@
 
 /* Cały ekran zawsze czarny */
 html, body {
-  background-color: #000;
+  background-color: #000; /* Jednolite czarne tło */
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
-}
-
-/* Gradient (opcjonalnie) */
-body {
-  background: linear-gradient(180deg, #000 0%, #111 100%);
-  color: #fff;
 }
 
 /* Styl dla ekranu powitalnego */
@@ -28,7 +22,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background-color: #000;
+  background-color: #000; /* Jednolite czarne tło */
   z-index: 10;
   gap: 20px; /* Odstęp między przyciskami */
 }
@@ -69,6 +63,16 @@ body {
   }
 }
 
+/* Animacja fade-out dla ekranu powitalnego */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* Klasa ukrycia */
 .hidden {
   display: none;
@@ -76,7 +80,7 @@ body {
 
 /* Klasa dla fade-in głównego ekranu */
 .fade-in {
-  animation: fadeIn 1s ease-in forwards;
+  animation: fadeIn 1.5s ease-in forwards; /* Wolniejszy fade-in (1.5s) */
 }
 
 /* Górny napis */
