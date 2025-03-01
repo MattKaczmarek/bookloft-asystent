@@ -2,6 +2,27 @@ let socket;
 let isDataImported = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const mainApp = document.getElementById('main-app');
+    const photosBtn = document.getElementById('photos-btn');
+    const shoppingBtn = document.getElementById('shopping-btn');
+
+    // Obsługa kliknięcia w przycisk "Zdjęcia"
+    photosBtn.addEventListener('click', () => {
+        welcomeScreen.style.display = 'none'; // Ukrycie ekranu powitalnego
+        mainApp.classList.remove('hidden'); // Wyświetlenie głównego ekranu
+        mainApp.classList.add('fade-in'); // Dodanie animacji fade-in
+        initializeApp(); // Inicjalizacja aplikacji
+    });
+
+    // Opcjonalnie: informacja dla przycisku "Zakupy"
+    shoppingBtn.addEventListener('click', () => {
+        alert('Funkcja "Zakupy" jest w trakcie разработки.');
+    });
+});
+
+// Funkcja inicjalizująca aplikację po wyświetleniu głównego ekranu
+function initializeApp() {
     // Inicjujemy socket.io
     socket = io();
 
@@ -14,7 +35,95 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('connect', () => {
         socket.emit('getData');
     });
-});
+
+    // Dodaj obsługę przycisków z głównego ekranu
+    setupButtonListeners();
+}
+
+// Funkcja do dodawania listenerów dla przycisków w głównym ekranie
+function setupButtonListeners() {
+    document.getElementById('import-button').addEventListener('click', () => {
+        if (isDataImported) {
+            alert('Najpierw wyczyść dane.');
+            return;
+        }
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.csv';
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            Papa.parse(file, {
+                complete: (results) => {
+                    socket.emit('importCSV', results.data);
+                    isDataImported = true;
+                },
+                error: (err) => {
+                    alert('Błąd odczytu pliku CSV: ' + err.message);
+                }
+            });
+        });
+        fileInput.click();
+    });
+
+    document.getElementById('clear-data-button').addEventListener('click', () => {
+        if (!confirm('Czy na pewno chcesz wyczyścić dane?')) return;
+        const pin = prompt('Aby wyczyścić dane, wpisz PIN (8892):');
+        if (pin !== '8892') {
+            alert('Niepoprawny PIN!');
+            return;
+        }
+        socket.emit('clearData');
+        isDataImported = false;
+    });
+
+    document.getElementById('export-descriptions-button').addEventListener('click', async () => {
+        try {
+            const resp = await fetch('/exportDescriptions');
+            if (!resp.ok) {
+                alert('Błąd eksportu opisów: ' + resp.status + ' ' + resp.statusText);
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'opisy_complete.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            alert('Błąd przy eksporcie opisów: ' + err);
+        }
+    });
+
+    document.getElementById('export-photos-button').addEventListener('click', async () => {
+        try {
+            const resp = await fetch('/exportPhotos');
+            if (!resp.ok) {
+                alert('Błąd eksportu zdjęć: ' + resp.status + ' ' + resp.statusText);
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'zdjecia.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            alert('Błąd pobierania ZIP: ' + err);
+        }
+    });
+
+    // Obsługa przycisku Miniaturki
+    document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
+}
 
 /**
  * Uaktualnia liczniki
@@ -50,88 +159,6 @@ function updateCounters() {
     document.getElementById('counter-incomplete').textContent = `Niekompletne: ${incomplete}`;
     document.getElementById('counter-total').textContent = `Razem: ${total}`;
 }
-
-// ---------------------------------------------------
-// Eventy dla przycisków
-
-document.getElementById('import-button').addEventListener('click', () => {
-    if (isDataImported) {
-        alert('Najpierw wyczyść dane.');
-        return;
-    }
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.csv';
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        Papa.parse(file, {
-            complete: (results) => {
-                socket.emit('importCSV', results.data);
-                isDataImported = true;
-            },
-            error: (err) => {
-                alert('Błąd odczytu pliku CSV: ' + err.message);
-            }
-        });
-    });
-    fileInput.click();
-});
-
-document.getElementById('clear-data-button').addEventListener('click', () => {
-    if (!confirm('Czy na pewno chcesz wyczyścić dane?')) return;
-    const pin = prompt('Aby wyczyścić dane, wpisz PIN (8892):');
-    if (pin !== '8892') {
-        alert('Niepoprawny PIN!');
-        return;
-    }
-    socket.emit('clearData');
-    isDataImported = false;
-});
-
-document.getElementById('export-descriptions-button').addEventListener('click', async () => {
-    try {
-        const resp = await fetch('/exportDescriptions');
-        if (!resp.ok) {
-            alert('Błąd eksportu opisów: ' + resp.status + ' ' + resp.statusText);
-            return;
-        }
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'opisy_complete.csv';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        alert('Błąd przy eksporcie opisów: ' + err);
-    }
-});
-
-document.getElementById('export-photos-button').addEventListener('click', async () => {
-    try {
-        const resp = await fetch('/exportPhotos');
-        if (!resp.ok) {
-            alert('Błąd eksportu zdjęć: ' + resp.status + ' ' + resp.statusText);
-            return;
-        }
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'zdjecia.zip';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        alert('Błąd pobierania ZIP: ' + err);
-    }
-});
 
 // ---------------------------------------------------
 // Renderowanie tabeli
@@ -237,18 +264,18 @@ function createPhotoItem(photoObj, id) {
         openImageModal('uploads/' + photoObj.full);
     });
 
-   const removeBtn = document.createElement('button');
-removeBtn.textContent = '×';
-removeBtn.classList.add('remove-photo');
-removeBtn.addEventListener('click', () => {
-    if (confirm("Czekaj kurwa... na pewno chcesz to zrobić?")) {
-        socket.emit('removePhoto', {
-            id: parseInt(id, 10),
-            fileFull: photoObj.full,
-            fileThumb: photoObj.thumb
-        });
-    }
-});
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '×';
+    removeBtn.classList.add('remove-photo');
+    removeBtn.addEventListener('click', () => {
+        if (confirm("Czekaj kurwa... na pewno chcesz to zrobić?")) {
+            socket.emit('removePhoto', {
+                id: parseInt(id, 10),
+                fileFull: photoObj.full,
+                fileThumb: photoObj.thumb
+            });
+        }
+    });
 
     item.appendChild(removeBtn);
     item.appendChild(img);
@@ -293,8 +320,6 @@ async function handleAddPhotos(itemID) {
 }
 
 // Obsługa przycisku Miniaturki
-document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
-
 async function handleThumbnails() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
