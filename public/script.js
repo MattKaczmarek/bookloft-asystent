@@ -9,15 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obsługa kliknięcia w przycisk "Zdjęcia"
     photosBtn.addEventListener('click', () => {
-        welcomeScreen.style.display = 'none'; // Ukrycie ekranu powitalnego
-        mainApp.classList.remove('hidden'); // Wyświetlenie głównego ekranu
-        mainApp.classList.add('fade-in'); // Dodanie animacji fade-in
-        initializeApp(); // Inicjalizacja aplikacji
+        // Dodanie animacji fade-out do ekranu powitalnego
+        welcomeScreen.style.animation = 'fadeOut 1s ease-in forwards';
+        
+        // Po zakończeniu animacji fade-out
+        welcomeScreen.addEventListener('animationend', () => {
+            welcomeScreen.style.display = 'none'; // Ukrycie ekranu powitalnego
+            mainApp.classList.remove('hidden'); // Wyświetlenie głównego ekranu
+            mainApp.classList.add('fade-in'); // Dodanie animacji fade-in
+            initializeApp(); // Inicjalizacja aplikacji
+        }, { once: true }); // Listener działa tylko raz
     });
 
     // Opcjonalnie: informacja dla przycisku "Zakupy"
     shoppingBtn.addEventListener('click', () => {
-        alert('Funkcja "Zakupy" jest w trakcie przygotowania.');
+        alert('Funkcja "Zakupy" jest w trakcie разработки.');
     });
 });
 
