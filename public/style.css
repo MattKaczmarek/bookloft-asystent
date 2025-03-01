@@ -39,8 +39,6 @@ html, body {
   background-color: #333; /* Identyczne tło jak reszta przycisków */
   color: #fff; /* Kolor tekstu */
   transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
-  opacity: 0; /* Na starcie niewidoczne */
-  animation: fadeIn 1s ease-in forwards; /* Animacja fade-in */
 }
 
 /* Hover dla przycisków */
@@ -54,34 +52,9 @@ html, body {
   transform: scale(0.98);
 }
 
-/* Animacja fade-in */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Animacja fade-out dla ekranu powitalnego */
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
 /* Klasa ukrycia */
 .hidden {
   display: none;
-}
-
-/* Klasa dla fade-in głównego ekranu */
-.fade-in {
-  animation: fadeIn 1.5s ease-in forwards; /* Wolniejszy fade-in (1.5s) */
 }
 
 /* Górny napis */
