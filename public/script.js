@@ -267,7 +267,7 @@ function createPhotoItem(photoObj, id) {
     removeBtn.textContent = '×';
     removeBtn.classList.add('remove-photo');
     removeBtn.addEventListener('click', () => {
-        if (confirm("Czekaj kurwa... na pewno chcesz to zrobić?")) {
+        if (confirm("Na pewno chcesz usunąć to zdjęcie?")) {
             socket.emit('removePhoto', {
                 id: parseInt(id, 10),
                 fileFull: photoObj.full,
