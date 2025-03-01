@@ -98,7 +98,7 @@ app.get('/exportPhotos', (req, res) => {
       return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
     }
 
-    const zip = archiver('zip', { zlib: { level: 9 } });
+    const zip = archiver('zip', { zlib: { level: 0 } });
     res.setHeader('Content-Disposition', 'attachment; filename="zdjecia.zip"');
     res.setHeader('Content-Type', 'application/zip');
     zip.pipe(res);
