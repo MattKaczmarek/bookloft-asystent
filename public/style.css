@@ -17,64 +17,9 @@ body {
   color: #fff;
 }
 
-/* Splash screen */
-#splash-screen {
-  position: fixed;
-  inset: 0;
-  background-color: #000; 
-  display: flex;
-  flex-direction: column; /* aby elementy układały się pionowo */
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  animation: splashFadeInOut 2s forwards;
-}
-
-/* Napis BookLoft w splashu */
-#splash-screen h1 {
-  font-size: 5rem;
-  color: #ccc;
-  margin: 0;
-}
-
-/* Nowy mniejszy napis w splashu */
-#splash-screen .splash-subtitle {
-  font-size: 1.5rem;
-  color: #ccc;
-  margin-top: 10px;
-}
-
-/* Animacja (fade in i fade out) */
-@keyframes splashFadeInOut {
-  0% {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  30% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  70% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
-/* Main-app początkowo niewidoczny (display: none + opacity=0) */
+/* Main-app od razu widoczny */
 #main-app {
-  display: none; 
-  opacity: 0;
-  animation: fadeInApp 0.8s forwards;
-}
-
-@keyframes fadeInApp {
-  to {
-    opacity: 1;
-  }
+  opacity: 1;
 }
 
 /* Górny napis */
