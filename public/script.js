@@ -14,7 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     socket.on('connect', () => {
         socket.emit('getData');
     });
+
+    // Inicjalizacja aplikacji od razu po załadowaniu
+    initializeApp();
 });
+
+// Funkcja inicjalizująca aplikację
+function initializeApp() {
+    // Dodaj obsługę przycisków z głównego ekranu
+    setupButtonListeners();
+}
 
 /**
  * Uaktualnia liczniki
@@ -54,84 +63,89 @@ function updateCounters() {
 // ---------------------------------------------------
 // Eventy dla przycisków
 
-document.getElementById('import-button').addEventListener('click', () => {
-    if (isDataImported) {
-        alert('Najpierw wyczyść dane.');
-        return;
-    }
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.csv';
+function setupButtonListeners() {
+    document.getElementById('import-button').addEventListener('click', () => {
+        if (isDataImported) {
+            alert('Najpierw wyczyść dane.');
+            return;
+        }
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.csv';
 
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        Papa.parse(file, {
-            complete: (results) => {
-                socket.emit('importCSV', results.data);
-                isDataImported = true;
-            },
-            error: (err) => {
-                alert('Błąd odczytu pliku CSV: ' + err.message);
-            }
+            Papa.parse(file, {
+                complete: (results) => {
+                    socket.emit('importCSV', results.data);
+                    isDataImported = true;
+                },
+                error: (err) => {
+                    alert('Błąd odczytu pliku CSV: ' + err.message);
+                }
+            });
         });
+        fileInput.click();
     });
-    fileInput.click();
-});
 
-document.getElementById('clear-data-button').addEventListener('click', () => {
-    if (!confirm('Czy na pewno chcesz wyczyścić dane?')) return;
-    const pin = prompt('Aby wyczyść dane, wpisz PIN (8892):');
-    if (pin !== '8892') {
-        alert('Niepoprawny PIN!');
-        return;
-    }
-    socket.emit('clearData');
-    isDataImported = false;
-});
-
-document.getElementById('export-descriptions-button').addEventListener('click', async () => {
-    try {
-        const resp = await fetch('/exportDescriptions');
-        if (!resp.ok) {
-            alert('Błąd eksportu opisów: ' + resp.status + ' ' + resp.statusText);
+    document.getElementById('clear-data-button').addEventListener('click', () => {
+        if (!confirm('Czy na pewno chcesz wyczyścić dane?')) return;
+        const pin = prompt('Aby wyczyścić dane, wpisz PIN (8892):');
+        if (pin !== '8892') {
+            alert('Niepoprawny PIN!');
             return;
         }
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'opisy_complete.csv';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        alert('Błąd przy eksporcie opisów: ' + err);
-    }
-});
+        socket.emit('clearData');
+        isDataImported = false;
+    });
 
-document.getElementById('export-photos-button').addEventListener('click', async () => {
-    try {
-        const resp = await fetch('/exportPhotos');
-        if (!resp.ok) {
-            alert('Błąd eksportu zdjęć: ' + resp.status + ' ' + resp.statusText);
-            return;
+    document.getElementById('export-descriptions-button').addEventListener('click', async () => {
+        try {
+            const resp = await fetch('/exportDescriptions');
+            if (!resp.ok) {
+                alert('Błąd eksportu opisów: ' + resp.status + ' ' + resp.statusText);
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'opisy_complete.csv';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            alert('Błąd przy eksporcie opisów: ' + err);
         }
-        const blob = await resp.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'zdjecia.zip';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        alert('Błąd pobierania ZIP: ' + err);
-    }
-});
+    });
+
+    document.getElementById('export-photos-button').addEventListener('click', async () => {
+        try {
+            const resp = await fetch('/exportPhotos');
+            if (!resp.ok) {
+                alert('Błąd eksportu zdjęć: ' + resp.status + ' ' + resp.statusText);
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'zdjecia.zip';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            alert('Błąd pobierania ZIP: ' + err);
+        }
+    });
+
+    // Obsługa przycisku Miniaturki
+    document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
+}
 
 // ---------------------------------------------------
 // Renderowanie tabeli
@@ -241,7 +255,7 @@ function createPhotoItem(photoObj, id) {
     removeBtn.textContent = '×';
     removeBtn.classList.add('remove-photo');
     removeBtn.addEventListener('click', () => {
-        if (confirm("Czekaj kurwa... na pewno chcesz to zrobić?")) {
+        if (confirm("Na pewno chcesz usunąć to zdjęcie?")) {
             socket.emit('removePhoto', {
                 id: parseInt(id, 10),
                 fileFull: photoObj.full,
@@ -293,8 +307,6 @@ async function handleAddPhotos(itemID) {
 }
 
 // Obsługa przycisku Miniaturki
-document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
-
 async function handleThumbnails() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -350,106 +362,98 @@ async function handleThumbnails() {
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
 function openImageModal(imageUrl) {
-  // Tworzymy overlay jako flex-container
-  const overlay = document.createElement('div');
-  overlay.id = 'image-modal';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-  overlay.style.zIndex = '10000';
-  overlay.style.display = 'flex';
-  overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
-  overlay.style.overflow = 'auto';
+    const overlay = document.createElement('div');
+    overlay.id = 'image-modal';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overlay.style.zIndex = '10000';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.overflow = 'auto';
 
-  // Kontener – shrink-wrap
-  const container = document.createElement('div');
-  container.id = 'modal-container';
-  container.style.position = 'relative';
-  container.style.display = 'inline-block';
-  container.style.cursor = 'grab';
-
-  // Element obrazka – ustawiony bez transformacji na starcie
-  const img = document.createElement('img');
-  img.src = imageUrl;
-  img.style.display = 'block';
-  img.style.position = 'relative';
-  img.style.transformOrigin = 'center center';
-  img.style.transition = 'transform 0.1s';
-  img.style.transform = 'none';
-  img.style.width = 'auto';
-  img.style.height = 'auto';
-  img.style.maxWidth = 'none';
-  img.style.maxHeight = 'none';
-
-  container.appendChild(img);
-  overlay.appendChild(container);
-
-  // Przycisk zamykania
-  const closeBtn = document.createElement('div');
-  closeBtn.textContent = '×';
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.top = '20px';
-  closeBtn.style.right = '20px';
-  closeBtn.style.fontSize = '30px';
-  closeBtn.style.color = '#fff';
-  closeBtn.style.cursor = 'pointer';
-  closeBtn.style.zIndex = '10001';
-  overlay.appendChild(closeBtn);
-  closeBtn.addEventListener('click', () => overlay.remove());
-
-  // Początkowe wartości zoomu i przesunięcia
-  let scale = 1;
-  let minScale = 1;
-  let posX = 0, posY = 0;
-
-  // Po załadowaniu obrazu obliczamy skalę, żeby obraz zmieścił się w viewportie
-  img.onload = function() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const nw = img.naturalWidth;
-    const nh = img.naturalHeight;
-    const initialScale = Math.min(1, vw / nw, vh / nh);
-    scale = initialScale;
-    minScale = initialScale;
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  };
-
-  // Zoomowanie przy użyciu scrolla – nie pozwalamy scale spaść poniżej minScale
-  container.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    scale = Math.min(Math.max(minScale, scale + delta), 5);
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  });
-
-  // Przesuwanie (pan)
-  let isPanning = false;
-  let startX = 0, startY = 0;
-  container.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    isPanning = true;
-    startX = e.clientX - posX;
-    startY = e.clientY - posY;
-    container.style.cursor = 'grabbing';
-  });
-  container.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    posX = e.clientX - startX;
-    posY = e.clientY - startY;
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  });
-  container.addEventListener('mouseup', () => {
-    isPanning = false;
+    const container = document.createElement('div');
+    container.id = 'modal-container';
+    container.style.position = 'relative';
+    container.style.display = 'inline-block';
     container.style.cursor = 'grab';
-  });
-  container.addEventListener('mouseleave', () => {
-    isPanning = false;
-    container.style.cursor = 'grab';
-  });
 
-  document.body.appendChild(overlay);
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.display = 'block';
+    img.style.position = 'relative';
+    img.style.transformOrigin = 'center center';
+    img.style.transition = 'transform 0.1s';
+    img.style.transform = 'none';
+    img.style.width = 'auto';
+    img.style.height = 'auto';
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+
+    container.appendChild(img);
+    overlay.appendChild(container);
+
+    const closeBtn = document.createElement('div');
+    closeBtn.textContent = '×';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '20px';
+    closeBtn.style.right = '20px';
+    closeBtn.style.fontSize = '30px';
+    closeBtn.style.color = '#fff';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.zIndex = '10001';
+    overlay.appendChild(closeBtn);
+    closeBtn.addEventListener('click', () => overlay.remove());
+
+    let scale = 1;
+    let minScale = 1;
+    let posX = 0, posY = 0;
+
+    img.onload = function() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const nw = img.naturalWidth;
+        const nh = img.naturalHeight;
+        const initialScale = Math.min(1, vw / nw, vh / nh);
+        scale = initialScale;
+        minScale = initialScale;
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    };
+
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        scale = Math.min(Math.max(minScale, scale + delta), 5);
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    });
+
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    container.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isPanning = true;
+        startX = e.clientX - posX;
+        startY = e.clientY - posY;
+        container.style.cursor = 'grabbing';
+    });
+    container.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        posX = e.clientX - startX;
+        posY = e.clientY - startY;
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    });
+    container.addEventListener('mouseup', () => {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+    container.addEventListener('mouseleave', () => {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+
+    document.body.appendChild(overlay);
 }

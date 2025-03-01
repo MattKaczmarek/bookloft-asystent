@@ -5,19 +5,18 @@
 
 /* Cały ekran zawsze czarny */
 html, body {
-  background-color: #000;
+  background-color: #000; /* Jednolite czarne tło */
   margin: 0;
   padding: 0;
   font-family: Arial, sans-serif;
   color: #fff;
 }
 
-/* Main-app */
-#main-app {
-  /* Usunięto display: none i animację, bo ekran powitalny został usunięty */
+/* Klasa ukrycia */
+.hidden {
+  display: none;
 }
 
-/* Styl dla przycisków aplikacji */
 main {
   padding: 20px;
 }
