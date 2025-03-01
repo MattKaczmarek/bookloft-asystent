@@ -2,14 +2,6 @@ let socket;
 let isDataImported = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const splash = document.getElementById('splash-screen');
-    const mainApp = document.getElementById('main-app');
-
-    splash.addEventListener('animationend', () => {
-        splash.style.display = 'none';
-        mainApp.style.display = 'block';
-    });
-
     // Inicjujemy socket.io
     socket = io();
 
@@ -461,5 +453,3 @@ function openImageModal(imageUrl) {
 
   document.body.appendChild(overlay);
 }
-
-
