@@ -26,36 +26,37 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   background-color: #000;
   z-index: 10;
+  gap: 20px; /* Odstęp między przyciskami */
 }
 
 /* Styl dla dużych przycisków */
 #photos-btn, #shopping-btn {
-  width: 80%;
-  padding: 20px;
-  font-size: 24px;
+  width: auto; /* Dopasowanie do zawartości */
+  padding: 15px 30px; /* Większe paddingi dla lepszego wyglądu */
+  font-size: 1.2rem;
   border: none;
-  border-radius: 10px;
+  border-radius: 4px;
   cursor: pointer;
+  background-color: #333; /* Identyczne tło jak reszta przycisków */
+  color: #fff; /* Kolor tekstu */
+  transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
   opacity: 0; /* Na starcie niewidoczne */
   animation: fadeIn 1s ease-in forwards; /* Animacja fade-in */
 }
 
-/* Górny przycisk "Zdjęcia" */
-#photos-btn {
-  margin-top: 20%;
-  background-color: #4CAF50;
-  color: white;
+/* Hover dla przycisków */
+#photos-btn:hover, #shopping-btn:hover {
+  background-color: #444; /* Identyczny hover jak reszta */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-/* Dolny przycisk "Zakupy" */
-#shopping-btn {
-  margin-bottom: 20%;
-  background-color: #2196F3;
-  color: white;
+/* Aktywacja przycisków */
+#photos-btn:active, #shopping-btn:active {
+  transform: scale(0.98);
 }
 
 /* Animacja fade-in */
