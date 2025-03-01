@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Opcjonalnie: informacja dla przycisku "Zakupy"
     shoppingBtn.addEventListener('click', () => {
-        alert('Funkcja "Zakupy" jest w trakcie разработки.');
+        alert('Funkcja "Zakupy" jest w trakcie przygotowania.');
     });
 });
 
