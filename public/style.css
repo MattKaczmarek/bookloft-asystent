@@ -17,9 +17,65 @@ body {
   color: #fff;
 }
 
-/* Main-app od razu widoczny */
-#main-app {
-  opacity: 1;
+/* Styl dla ekranu powitalnego */
+#welcome-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #000;
+  z-index: 10;
+}
+
+/* Styl dla dużych przycisków */
+#photos-btn, #shopping-btn {
+  width: 80%;
+  padding: 20px;
+  font-size: 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  opacity: 0; /* Na starcie niewidoczne */
+  animation: fadeIn 1s ease-in forwards; /* Animacja fade-in */
+}
+
+/* Górny przycisk "Zdjęcia" */
+#photos-btn {
+  margin-top: 20%;
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* Dolny przycisk "Zakupy" */
+#shopping-btn {
+  margin-bottom: 20%;
+  background-color: #2196F3;
+  color: white;
+}
+
+/* Animacja fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Klasa ukrycia */
+.hidden {
+  display: none;
+}
+
+/* Klasa dla fade-in głównego ekranu */
+.fade-in {
+  animation: fadeIn 1s ease-in forwards;
 }
 
 /* Górny napis */
