@@ -2,26 +2,6 @@ let socket;
 let isDataImported = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const mainApp = document.getElementById('main-app');
-    const photosBtn = document.getElementById('photos-btn');
-    const shoppingBtn = document.getElementById('shopping-btn');
-
-    // Obsługa kliknięcia w przycisk "Zdjęcia"
-    photosBtn.addEventListener('click', () => {
-        welcomeScreen.style.display = 'none'; // Ukrycie ekranu powitalnego
-        mainApp.classList.remove('hidden'); // Wyświetlenie głównego ekranu
-        initializeApp(); // Inicjalizacja aplikacji
-    });
-
-    // Opcjonalnie: informacja dla przycisku "Zakupy"
-    shoppingBtn.addEventListener('click', () => {
-        alert('Funkcja "Zakupy" jest w trakcie przygotowania.');
-    });
-});
-
-// Funkcja inicjalizująca aplikację po wyświetleniu głównego ekranu
-function initializeApp() {
     // Inicjujemy socket.io
     socket = io();
 
@@ -35,11 +15,54 @@ function initializeApp() {
         socket.emit('getData');
     });
 
+    // Inicjalizacja aplikacji od razu po załadowaniu
+    initializeApp();
+});
+
+// Funkcja inicjalizująca aplikację
+function initializeApp() {
     // Dodaj obsługę przycisków z głównego ekranu
     setupButtonListeners();
 }
 
-// Funkcja do dodawania listenerów dla przycisków w głównym ekranie
+/**
+ * Uaktualnia liczniki
+ */
+function updateCounters() {
+    const rows = document.querySelectorAll('#product-table tbody tr');
+    let total = 0, complete = 0, incomplete = 0;
+
+    rows.forEach(row => {
+        total++;
+        const desc = (row.querySelector('textarea')?.value || '').trim();
+        const photoGrid = row.querySelector('.photo-grid');
+        const photoCount = photoGrid ? photoGrid.querySelectorAll('.photo-item').length : 0;
+        row.classList.remove('row-empty', 'row-incomplete', 'row-complete');
+
+        // Zielony (row-complete): opis + minimum 4 zdjęcia
+        if (desc.length > 0 && photoCount >= 4) {
+            row.classList.add('row-complete');
+            complete++;
+        }
+        // Czarny (row-empty): brak opisu i brak zdjęć
+        else if (desc.length === 0 && photoCount === 0) {
+            row.classList.add('row-empty');
+        }
+        // Żółty (row-incomplete): w każdym innym wypadku
+        else {
+            row.classList.add('row-incomplete');
+            incomplete++;
+        }
+    });
+
+    document.getElementById('counter-complete').textContent = `Gotowe: ${complete}`;
+    document.getElementById('counter-incomplete').textContent = `Niekompletne: ${incomplete}`;
+    document.getElementById('counter-total').textContent = `Razem: ${total}`;
+}
+
+// ---------------------------------------------------
+// Eventy dla przycisków
+
 function setupButtonListeners() {
     document.getElementById('import-button').addEventListener('click', () => {
         if (isDataImported) {
@@ -122,41 +145,6 @@ function setupButtonListeners() {
 
     // Obsługa przycisku Miniaturki
     document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
-}
-
-/**
- * Uaktualnia liczniki
- */
-function updateCounters() {
-    const rows = document.querySelectorAll('#product-table tbody tr');
-    let total = 0, complete = 0, incomplete = 0;
-
-    rows.forEach(row => {
-        total++;
-        const desc = (row.querySelector('textarea')?.value || '').trim();
-        const photoGrid = row.querySelector('.photo-grid');
-        const photoCount = photoGrid ? photoGrid.querySelectorAll('.photo-item').length : 0;
-        row.classList.remove('row-empty','row-incomplete','row-complete');
-
-        // Zielony (row-complete): opis + minimum 4 zdjęcia
-        if (desc.length > 0 && photoCount >= 4) {
-            row.classList.add('row-complete');
-            complete++;
-        }
-        // Czarny (row-empty): brak opisu i brak zdjęć
-        else if (desc.length === 0 && photoCount === 0) {
-            row.classList.add('row-empty');
-        }
-        // Żółty (row-incomplete): w każdym innym wypadku
-        else {
-            row.classList.add('row-incomplete');
-            incomplete++;
-        }
-    });
-
-    document.getElementById('counter-complete').textContent = `Gotowe: ${complete}`;
-    document.getElementById('counter-incomplete').textContent = `Niekompletne: ${incomplete}`;
-    document.getElementById('counter-total').textContent = `Razem: ${total}`;
 }
 
 // ---------------------------------------------------
