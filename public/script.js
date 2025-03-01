@@ -9,16 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obsługa kliknięcia w przycisk "Zdjęcia"
     photosBtn.addEventListener('click', () => {
-        // Dodanie animacji fade-out do ekranu powitalnego
-        welcomeScreen.style.animation = 'fadeOut 1s ease-in forwards';
-        
-        // Po zakończeniu animacji fade-out
-        welcomeScreen.addEventListener('animationend', () => {
-            welcomeScreen.style.display = 'none'; // Ukrycie ekranu powitalnego
-            mainApp.classList.remove('hidden'); // Wyświetlenie głównego ekranu
-            mainApp.classList.add('fade-in'); // Dodanie animacji fade-in
-            initializeApp(); // Inicjalizacja aplikacji
-        }, { once: true }); // Listener działa tylko raz
+        welcomeScreen.style.display = 'none'; // Ukrycie ekranu powitalnego
+        mainApp.classList.remove('hidden'); // Wyświetlenie głównego ekranu
+        initializeApp(); // Inicjalizacja aplikacji
     });
 
     // Opcjonalnie: informacja dla przycisku "Zakupy"
@@ -381,106 +374,98 @@ async function handleThumbnails() {
 // --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
 function openImageModal(imageUrl) {
-  // Tworzymy overlay jako flex-container
-  const overlay = document.createElement('div');
-  overlay.id = 'image-modal';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-  overlay.style.zIndex = '10000';
-  overlay.style.display = 'flex';
-  overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
-  overlay.style.overflow = 'auto';
+    const overlay = document.createElement('div');
+    overlay.id = 'image-modal';
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+    overlay.style.zIndex = '10000';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.overflow = 'auto';
 
-  // Kontener – shrink-wrap
-  const container = document.createElement('div');
-  container.id = 'modal-container';
-  container.style.position = 'relative';
-  container.style.display = 'inline-block';
-  container.style.cursor = 'grab';
-
-  // Element obrazka – ustawiony bez transformacji na starcie
-  const img = document.createElement('img');
-  img.src = imageUrl;
-  img.style.display = 'block';
-  img.style.position = 'relative';
-  img.style.transformOrigin = 'center center';
-  img.style.transition = 'transform 0.1s';
-  img.style.transform = 'none';
-  img.style.width = 'auto';
-  img.style.height = 'auto';
-  img.style.maxWidth = 'none';
-  img.style.maxHeight = 'none';
-
-  container.appendChild(img);
-  overlay.appendChild(container);
-
-  // Przycisk zamykania
-  const closeBtn = document.createElement('div');
-  closeBtn.textContent = '×';
-  closeBtn.style.position = 'absolute';
-  closeBtn.style.top = '20px';
-  closeBtn.style.right = '20px';
-  closeBtn.style.fontSize = '30px';
-  closeBtn.style.color = '#fff';
-  closeBtn.style.cursor = 'pointer';
-  closeBtn.style.zIndex = '10001';
-  overlay.appendChild(closeBtn);
-  closeBtn.addEventListener('click', () => overlay.remove());
-
-  // Początkowe wartości zoomu i przesunięcia
-  let scale = 1;
-  let minScale = 1;
-  let posX = 0, posY = 0;
-
-  // Po załadowaniu obrazu obliczamy skalę, żeby obraz zmieścił się w viewportie
-  img.onload = function() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const nw = img.naturalWidth;
-    const nh = img.naturalHeight;
-    const initialScale = Math.min(1, vw / nw, vh / nh);
-    scale = initialScale;
-    minScale = initialScale;
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  };
-
-  // Zoomowanie przy użyciu scrolla – nie pozwalamy scale spaść poniżej minScale
-  container.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    scale = Math.min(Math.max(minScale, scale + delta), 5);
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  });
-
-  // Przesuwanie (pan)
-  let isPanning = false;
-  let startX = 0, startY = 0;
-  container.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    isPanning = true;
-    startX = e.clientX - posX;
-    startY = e.clientY - posY;
-    container.style.cursor = 'grabbing';
-  });
-  container.addEventListener('mousemove', (e) => {
-    if (!isPanning) return;
-    posX = e.clientX - startX;
-    posY = e.clientY - startY;
-    img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-  });
-  container.addEventListener('mouseup', () => {
-    isPanning = false;
+    const container = document.createElement('div');
+    container.id = 'modal-container';
+    container.style.position = 'relative';
+    container.style.display = 'inline-block';
     container.style.cursor = 'grab';
-  });
-  container.addEventListener('mouseleave', () => {
-    isPanning = false;
-    container.style.cursor = 'grab';
-  });
 
-  document.body.appendChild(overlay);
+    const img = document.createElement('img');
+    img.src = imageUrl;
+    img.style.display = 'block';
+    img.style.position = 'relative';
+    img.style.transformOrigin = 'center center';
+    img.style.transition = 'transform 0.1s';
+    img.style.transform = 'none';
+    img.style.width = 'auto';
+    img.style.height = 'auto';
+    img.style.maxWidth = 'none';
+    img.style.maxHeight = 'none';
+
+    container.appendChild(img);
+    overlay.appendChild(container);
+
+    const closeBtn = document.createElement('div');
+    closeBtn.textContent = '×';
+    closeBtn.style.position = 'absolute';
+    closeBtn.style.top = '20px';
+    closeBtn.style.right = '20px';
+    closeBtn.style.fontSize = '30px';
+    closeBtn.style.color = '#fff';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.style.zIndex = '10001';
+    overlay.appendChild(closeBtn);
+    closeBtn.addEventListener('click', () => overlay.remove());
+
+    let scale = 1;
+    let minScale = 1;
+    let posX = 0, posY = 0;
+
+    img.onload = function() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const nw = img.naturalWidth;
+        const nh = img.naturalHeight;
+        const initialScale = Math.min(1, vw / nw, vh / nh);
+        scale = initialScale;
+        minScale = initialScale;
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    };
+
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.1 : -0.1;
+        scale = Math.min(Math.max(minScale, scale + delta), 5);
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    });
+
+    let isPanning = false;
+    let startX = 0, startY = 0;
+    container.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        isPanning = true;
+        startX = e.clientX - posX;
+        startY = e.clientY - posY;
+        container.style.cursor = 'grabbing';
+    });
+    container.addEventListener('mousemove', (e) => {
+        if (!isPanning) return;
+        posX = e.clientX - startX;
+        posY = e.clientY - startY;
+        img.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+    });
+    container.addEventListener('mouseup', () => {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+    container.addEventListener('mouseleave', () => {
+        isPanning = false;
+        container.style.cursor = 'grab';
+    });
+
+    document.body.appendChild(overlay);
 }
