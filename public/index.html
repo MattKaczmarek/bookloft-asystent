@@ -4,25 +4,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>BookLoft - Asystent Zdjęć</title>
-
-    <!-- Favicona w pasku kart -->
     <link rel="icon" href="icons/icon-144.png" type="image/png">
-
-    <!-- PWA: manifest + theme color -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
-
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
-
-    <!-- PapaParse, Sortable, JSZip - tak jak wcześniej -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
 </head>
 <body class="font-sans">
-    <!-- Aplikacja - startuje od razu -->
-    <div id="main-app">
+    <div id="welcome-screen" class="welcome-screen">
+        <div class="welcome-content">
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Kasia</th>
+                        <th>Michał</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="kasia-sum">Suma: 0</td>
+                        <td id="michal-sum">Suma: 0</td>
+                    </tr>
+                    <tr>
+                        <td id="kasia-today">Dzisiaj: 0</td>
+                        <td id="michal-today">Dzisiaj: 0</td>
+                    </tr>
+                    <tr>
+                        <td id="kasia-average">Średnia: 0</td>
+                        <td id="michal-average">Średnia: 0</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button id="photos-button" class="welcome-button">Zdjęcia</button>
+        </div>
+    </div>
+    <div id="main-app" class="hidden">
         <main>
             <section class="controls">
                 <div class="buttons">
@@ -38,7 +57,6 @@
                     </div>
                 </div>
             </section>
-
             <section class="table-container">
                 <table id="product-table">
                     <thead>
@@ -54,13 +72,8 @@
             </section>
         </main>
     </div>
-
-    <!-- Klient Socket.IO -->
     <script src="/socket.io/socket.io.js"></script>
-    <!-- Twój plik z logiką front-endu -->
     <script src="script.js"></script>
-
-    <!-- Rejestracja service workera (konieczna, by PWA działało) -->
     <script>
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/service-worker.js')
