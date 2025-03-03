@@ -38,10 +38,7 @@ function fetchSheetData() {
         })
         .then(data => {
             if (data.status === 'ok') {
-                // Debugowanie wartości z serwera
-                console.log('Dane z serwera:', data.data);
-
-                // Wymuszenie dwóch miejsc po przecinku z polskim formatem
+                // Aktualizacja tabeli powitalnej z pełnymi wartościami i przecinkiem
                 const formatNumber = (num) => {
                     return num.toLocaleString('pl-PL', {
                         minimumFractionDigits: 2,
