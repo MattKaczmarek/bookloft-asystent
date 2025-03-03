@@ -52,11 +52,14 @@
 }
 
 /* Nowy styl dla przycisku Home z białym zarysem */
+:root {
+    --icon-size: 32px; /* Zmienna do łatwej zmiany rozmiaru ikony - dostosuj tę wartość */
+}
 .home-button {
     background-color: transparent; /* Brak wypełnienia */
     border: 2px solid #fff; /* Biały zarys */
     color: #fff;
-    padding: 8px; /* Mniejszy padding dla ikony */
+    padding: 8px; /* Padding dla ikony */
     cursor: pointer;
     transition: border-color 0.3s, transform 0.1s, box-shadow 0.3s;
     font-size: 1rem;
@@ -64,8 +67,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px; /* Stała szerokość dla ikony */
-    height: 40px; /* Stała wysokość dla ikony */
+    min-width: calc(var(--icon-size) + 16px); /* Elastyczny rozmiar z paddingiem */
+    min-height: calc(var(--icon-size) + 16px); /* Elastyczny rozmiar z paddingiem */
 }
 
 .home-button:hover {
@@ -78,8 +81,8 @@
 }
 
 .home-button svg {
-    width: 50px !important; /* Wymuszenie rozmiaru */
-    height: 50px !important; /* Wymuszenie rozmiaru */
+    width: var(--icon-size); /* Rozmiar ikony kontrolowany przez zmienną */
+    height: var(--icon-size); /* Rozmiar ikony kontrolowany przez zmienną */
 }
 
 /* Reszta stylów bez zmian */
