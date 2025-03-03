@@ -2,32 +2,61 @@ let socket;
 let isDataImported = false;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Inicjujemy socket.io
     socket = io();
 
-    // Gdy serwer wyśle zaktualizowane dane
     socket.on('dataUpdate', (data) => {
         renderTable(data);
     });
 
-    // Po podłączeniu poproś o aktualne dane
     socket.on('connect', () => {
         socket.emit('getData');
     });
 
-    // Inicjalizacja aplikacji od razu po załadowaniu
+    // Dodana obsługa przycisku "Zdjęcia"
+    document.getElementById('photos-button').addEventListener('click', () => {
+        document.getElementById('welcome-screen').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+    });
+
+    // Pobieranie danych z Google Sheets przy załadowaniu strony
+    fetchSheetData();
+
     initializeApp();
 });
 
-// Funkcja inicjalizująca aplikację
 function initializeApp() {
-    // Dodaj obsługę przycisków z głównego ekranu
     setupButtonListeners();
 }
 
-/**
- * Uaktualnia liczniki
- */
+function fetchSheetData() {
+    fetch('/getSheetData')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Błąd pobierania danych z arkusza.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'ok') {
+                // Aktualizacja tabeli powitalnej z pełnymi wartościami i przecinkiem
+                document.getElementById('kasia-sum').textContent = `Suma: ${data.data.kasia.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('kasia-average').textContent = `Średnia: ${data.data.kasia.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('michal-sum').textContent = `Suma: ${data.data.michal.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('michal-average').textContent = `Średnia: ${data.data.michal.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            } else {
+                console.error('Błąd w danych:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error.message);
+            // Ustaw domyślne wartości w przypadku błędu
+            document.getElementById('kasia-sum').textContent = 'Suma: 0,00';
+            document.getElementById('kasia-average').textContent = 'Średnia: 0,00';
+            document.getElementById('michal-sum').textContent = 'Suma: 0,00';
+            document.getElementById('michal-average').textContent = 'Średnia: 0,00';
+        });
+}
+
 function updateCounters() {
     const rows = document.querySelectorAll('#product-table tbody tr');
     let total = 0, complete = 0, incomplete = 0;
@@ -39,16 +68,13 @@ function updateCounters() {
         const photoCount = photoGrid ? photoGrid.querySelectorAll('.photo-item').length : 0;
         row.classList.remove('row-empty', 'row-incomplete', 'row-complete');
 
-        // Zielony (row-complete): opis + minimum 4 zdjęcia
         if (desc.length > 0 && photoCount >= 4) {
             row.classList.add('row-complete');
             complete++;
         }
-        // Czarny (row-empty): brak opisu i brak zdjęć
         else if (desc.length === 0 && photoCount === 0) {
             row.classList.add('row-empty');
         }
-        // Żółty (row-incomplete): w każdym innym wypadku
         else {
             row.classList.add('row-incomplete');
             incomplete++;
@@ -59,9 +85,6 @@ function updateCounters() {
     document.getElementById('counter-incomplete').textContent = `Niekompletne: ${incomplete}`;
     document.getElementById('counter-total').textContent = `Razem: ${total}`;
 }
-
-// ---------------------------------------------------
-// Eventy dla przycisków
 
 function setupButtonListeners() {
     document.getElementById('import-button').addEventListener('click', () => {
@@ -143,12 +166,8 @@ function setupButtonListeners() {
         }
     });
 
-    // Obsługa przycisku Miniaturki
     document.getElementById('thumbnails-button').addEventListener('click', handleThumbnails);
 }
-
-// ---------------------------------------------------
-// Renderowanie tabeli
 
 function renderTable(data) {
     const tbody = document.querySelector('#product-table tbody');
@@ -159,17 +178,14 @@ function renderTable(data) {
         const row = document.createElement('tr');
         row.dataset.id = item.id;
 
-        // SKU
         const skuTd = document.createElement('td');
         skuTd.textContent = item.sku;
         row.appendChild(skuTd);
 
-        // Tytuł
         const titleTd = document.createElement('td');
         titleTd.textContent = item.title;
         row.appendChild(titleTd);
 
-        // Opis
         const descTd = document.createElement('td');
         descTd.classList.add('column-opisy');
         const textarea = document.createElement('textarea');
@@ -184,7 +200,6 @@ function renderTable(data) {
         descTd.appendChild(textarea);
         row.appendChild(descTd);
 
-        // Zdjęcia
         const photosTd = document.createElement('td');
         photosTd.classList.add('column-zdjecia');
         const photoActions = document.createElement('div');
@@ -210,7 +225,6 @@ function renderTable(data) {
         tbody.appendChild(row);
     });
 
-    // Obsługa sortowania zdjęć
     document.querySelectorAll('.photo-grid').forEach(grid => {
         new Sortable(grid, {
             animation: 150,
@@ -234,19 +248,15 @@ function renderTable(data) {
     updateCounters();
 }
 
-// Tworzy pojedynczą miniaturkę
 function createPhotoItem(photoObj, id) {
     const item = document.createElement('div');
     item.classList.add('photo-item');
     item.dataset.full = photoObj.full;
 
     const img = document.createElement('img');
-    // Pobrane z folderu uploads:
     img.src = 'uploads/' + (photoObj.thumb || photoObj.full);
 
-    // Dodaj event listener do powiększania zdjęcia
     img.addEventListener('click', (e) => {
-        // Zapobiegamy konfliktowi z przeciąganiem
         e.stopPropagation();
         openImageModal('uploads/' + photoObj.full);
     });
@@ -269,7 +279,6 @@ function createPhotoItem(photoObj, id) {
     return item;
 }
 
-// Dodawanie zdjęć -> wysyłamy pliki do /addPhotos (HTTP POST, Multer)
 async function handleAddPhotos(itemID) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -280,7 +289,6 @@ async function handleAddPhotos(itemID) {
         const files = e.target.files;
         if (!files || !files.length) return;
 
-        // Sortujemy pliki po nazwie, aby trzymać kolejność
         const sorted = Array.from(files).sort((a, b) =>
             a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
         );
@@ -298,7 +306,6 @@ async function handleAddPhotos(itemID) {
             if (json.status !== 'ok') {
                 alert(json.message || 'Błąd przy dodawaniu zdjęć.');
             }
-            // Serwer i tak wyemituje dataUpdate => renderTable
         } catch (err) {
             alert('Błąd sieci przy dodawaniu zdjęć: ' + err);
         }
@@ -306,7 +313,6 @@ async function handleAddPhotos(itemID) {
     fileInput.click();
 }
 
-// Obsługa przycisku Miniaturki
 async function handleThumbnails() {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
@@ -317,20 +323,16 @@ async function handleThumbnails() {
         const files = e.target.files;
         if (!files || !files.length) return;
 
-        // Pobierz wszystkie wiersze z klasą "row-complete" (gotowe pozycje)
         const completeRows = Array.from(document.querySelectorAll('#product-table tbody tr.row-complete'));
         
-        // Przetwarzaj każdy wybrany plik
         for (const file of files) {
-            // Wyciągnij numer gotowej pozycji z nazwy pliku (np. "0 (7)-Photoroom")
             const match = file.name.match(/0 \((\d+)\)-Photoroom/);
             if (match) {
-                const targetIndex = parseInt(match[1], 10); // numer pozycji (1-based)
+                const targetIndex = parseInt(match[1], 10);
                 if (targetIndex <= completeRows.length) {
                     const row = completeRows[targetIndex - 1];
                     const productId = row.dataset.id;
 
-                    // Przygotuj dane do wysłania
                     const formData = new FormData();
                     formData.append('id', productId);
                     formData.append('photo', file);
@@ -358,8 +360,6 @@ async function handleThumbnails() {
 
     fileInput.click();
 }
-
-// --- Funkcje modalu do powiększania zdjęć z zoomem i przesuwaniem ---
 
 function openImageModal(imageUrl) {
     const overlay = document.createElement('div');
