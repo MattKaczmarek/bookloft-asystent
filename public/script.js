@@ -38,11 +38,11 @@ function fetchSheetData() {
         })
         .then(data => {
             if (data.status === 'ok') {
-                // Aktualizacja tabeli powitalnej
-                document.getElementById('kasia-sum').textContent = `Suma: ${data.data.kasia.sum.toFixed(2)}`;
-                document.getElementById('kasia-average').textContent = `Średnia: ${data.data.kasia.average.toFixed(2)}`;
-                document.getElementById('michal-sum').textContent = `Suma: ${data.data.michal.sum.toFixed(2)}`;
-                document.getElementById('michal-average').textContent = `Średnia: ${data.data.michal.average.toFixed(2)}`;
+                // Aktualizacja tabeli powitalnej z pełnymi wartościami i przecinkiem
+                document.getElementById('kasia-sum').textContent = `Suma: ${data.data.kasia.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('kasia-average').textContent = `Średnia: ${data.data.kasia.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('michal-sum').textContent = `Suma: ${data.data.michal.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                document.getElementById('michal-average').textContent = `Średnia: ${data.data.michal.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             } else {
                 console.error('Błąd w danych:', data.message);
             }
@@ -50,10 +50,10 @@ function fetchSheetData() {
         .catch(error => {
             console.error('Błąd:', error.message);
             // Ustaw domyślne wartości w przypadku błędu
-            document.getElementById('kasia-sum').textContent = 'Suma: 0';
-            document.getElementById('kasia-average').textContent = 'Średnia: 0';
-            document.getElementById('michal-sum').textContent = 'Suma: 0';
-            document.getElementById('michal-average').textContent = 'Średnia: 0';
+            document.getElementById('kasia-sum').textContent = 'Suma: 0,00';
+            document.getElementById('kasia-average').textContent = 'Średnia: 0,00';
+            document.getElementById('michal-sum').textContent = 'Suma: 0,00';
+            document.getElementById('michal-average').textContent = 'Średnia: 0,00';
         });
 }
 
