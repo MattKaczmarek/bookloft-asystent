@@ -18,11 +18,43 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('main-app').classList.remove('hidden');
     });
 
+    // Pobieranie danych z Google Sheets przy załadowaniu strony
+    fetchSheetData();
+
     initializeApp();
 });
 
 function initializeApp() {
     setupButtonListeners();
+}
+
+function fetchSheetData() {
+    fetch('/getSheetData')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Błąd pobierania danych z arkusza.');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'ok') {
+                // Aktualizacja tabeli powitalnej
+                document.getElementById('kasia-sum').textContent = `Suma: ${data.data.kasia.sum.toFixed(2)}`;
+                document.getElementById('kasia-average').textContent = `Średnia: ${data.data.kasia.average.toFixed(2)}`;
+                document.getElementById('michal-sum').textContent = `Suma: ${data.data.michal.sum.toFixed(2)}`;
+                document.getElementById('michal-average').textContent = `Średnia: ${data.data.michal.average.toFixed(2)}`;
+            } else {
+                console.error('Błąd w danych:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error.message);
+            // Ustaw domyślne wartości w przypadku błędu
+            document.getElementById('kasia-sum').textContent = 'Suma: 0';
+            document.getElementById('kasia-average').textContent = 'Średnia: 0';
+            document.getElementById('michal-sum').textContent = 'Suma: 0';
+            document.getElementById('michal-average').textContent = 'Średnia: 0';
+        });
 }
 
 function updateCounters() {
