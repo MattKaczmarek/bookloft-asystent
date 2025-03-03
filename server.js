@@ -69,15 +69,23 @@ app.get('/getSheetData', async (req, res) => {
       return res.status(404).json({ status: 'error', message: 'Brak danych w arkuszu.' });
     }
 
-    // Parsowanie danych z arkusza
+    // Funkcja konwertująca string z przecinkiem na liczbę
+    const parsePolishNumber = (str) => {
+      if (typeof str === 'string') {
+        return parseFloat(str.replace(',', '.')) || 0;
+      }
+      return parseFloat(str) || 0;
+    };
+
+    // Parsowanie danych z arkusza z poprawną konwersją
     const data = {
       kasia: {
-        sum: parseFloat(rows[1][1]) || 0, // B2 - Suma Kasi
-        average: parseFloat(rows[2][1]) || 0, // B3 - Średnia Kasi
+        sum: parsePolishNumber(rows[1][1]), // B2 - Suma Kasi
+        average: parsePolishNumber(rows[2][1]), // B3 - Średnia Kasi
       },
       michal: {
-        sum: parseFloat(rows[1][3]) || 0, // D2 - Suma Michała
-        average: parseFloat(rows[2][3]) || 0, // D3 - Średnia Michała
+        sum: parsePolishNumber(rows[1][3]), // D2 - Suma Michała
+        average: parsePolishNumber(rows[2][3]), // D3 - Średnia Michała
       },
     };
 
