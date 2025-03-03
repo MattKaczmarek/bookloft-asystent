@@ -38,11 +38,22 @@ function fetchSheetData() {
         })
         .then(data => {
             if (data.status === 'ok') {
-                // Aktualizacja tabeli powitalnej z pełnymi wartościami i przecinkiem
-                document.getElementById('kasia-sum').textContent = `Suma: ${data.data.kasia.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.getElementById('kasia-average').textContent = `Średnia: ${data.data.kasia.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.getElementById('michal-sum').textContent = `Suma: ${data.data.michal.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.getElementById('michal-average').textContent = `Średnia: ${data.data.michal.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                // Debugowanie wartości z serwera
+                console.log('Dane z serwera:', data.data);
+
+                // Wymuszenie dwóch miejsc po przecinku z polskim formatem
+                const formatNumber = (num) => {
+                    return num.toLocaleString('pl-PL', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                };
+
+                // Aktualizacja tabeli powitalnej
+                document.getElementById('kasia-sum').textContent = `Suma: ${formatNumber(data.data.kasia.sum)}`;
+                document.getElementById('kasia-average').textContent = `Średnia: ${formatNumber(data.data.kasia.average)}`;
+                document.getElementById('michal-sum').textContent = `Suma: ${formatNumber(data.data.michal.sum)}`;
+                document.getElementById('michal-average').textContent = `Średnia: ${formatNumber(data.data.michal.average)}`;
             } else {
                 console.error('Błąd w danych:', data.message);
             }
