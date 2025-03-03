@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('main-app').classList.remove('hidden');
     });
 
+    // Dodana obsługa przycisku "Home" (powrót do ekranu powitalnego)
+    document.getElementById('home-button').addEventListener('click', () => {
+        document.getElementById('main-app').classList.add('hidden');
+        document.getElementById('welcome-screen').classList.remove('hidden');
+    });
+
     // Pobieranie danych z Google Sheets przy załadowaniu strony
     fetchSheetData();
 
