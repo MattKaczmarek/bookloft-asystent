@@ -51,6 +51,30 @@
     transform: scale(0.98);
 }
 
+/* Nowy styl dla przycisku Home */
+.home-button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s, box-shadow 0.3s;
+    font-size: 1rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.home-button:hover {
+    background-color: #444;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.home-button:active {
+    transform: scale(0.98);
+}
+
 /* Reszta stylów bez zmian */
 * {
   box-sizing: border-box;
@@ -223,7 +247,7 @@ main {
   border: none;
   cursor: pointer;
   font-size: 14px;
-  padding: 2px 5px;
+  padding: 2px 15px;
   z-index: 2;
   opacity: 0.8;
   border-radius: 3px;
@@ -278,6 +302,10 @@ main {
     width: auto !important;
     white-space: pre-wrap;
     overflow-wrap: break-word;
+  }
+  /* Nowy przycisk Home jest widoczny na telefonach */
+  #home-button {
+    display: flex !important;
   }
 }
 
