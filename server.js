@@ -1,11 +1,12 @@
-const express = require('express'); 
+const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
 const sharp = require('sharp');
-const archiver = require('archiver'); // only once, at the top!
+const archiver = require('archiver');
+const { google } = require('googleapis'); // Dodajemy Google API
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
@@ -14,12 +15,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-// If uploads/ doesn’t exist, create it
+// Jeśli uploads/ nie istnieje, stwórz go
 if (!fs.existsSync(UPLOADS_DIR)) {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 }
 
-// Functions to read/write data
+// Funkcje do odczytu/zapisu danych lokalnych
 function loadData() {
   if (!fs.existsSync(DATA_FILE)) return [];
   return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
@@ -47,6 +48,46 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Konfiguracja Google Sheets API z kluczem API
+const sheets = google.sheets({
+  version: 'v4',
+  auth: 'AIzaSyAgrOsPIF924YXYq-_TZVPeNZ89rRjpWuo', // Twój klucz API wstawiony bezpośrednio
+});
+
+app.get('/getSheetData', async (req, res) => {
+  try {
+    const spreadsheetId = '14HLypb1M8o3DKWof6a0yCuJ2NE3am6d77spO9NTyALY'; // Zapamiętane ID arkusza
+    const range = 'A1:D3'; // Zakres z screena
+
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range,
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ status: 'error', message: 'Brak danych w arkuszu.' });
+    }
+
+    // Parsowanie danych z arkusza
+    const data = {
+      kasia: {
+        sum: parseFloat(rows[1][1]) || 0, // B2 - Suma Kasi
+        average: parseFloat(rows[2][1]) || 0, // B3 - Średnia Kasi
+      },
+      michal: {
+        sum: parseFloat(rows[1][3]) || 0, // D2 - Suma Michała
+        average: parseFloat(rows[2][3]) || 0, // D3 - Średnia Michała
+      },
+    };
+
+    res.json({ status: 'ok', data });
+  } catch (err) {
+    console.error('Błąd przy pobieraniu danych z Google Sheets:', err);
+    res.status(500).json({ status: 'error', message: 'Błąd serwera przy pobieraniu danych z arkusza.' });
+  }
+});
+
 app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
   try {
     const id = parseInt(req.body.id, 10);
@@ -65,9 +106,8 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
       const baseName = path.parse(full).name;
       const thumb = 'thumb_' + baseName + '.jpg';
 
-      // Create a 300px-wide thumbnail
       await sharp(file.path)
-        .rotate() // auto-orient based on EXIF
+        .rotate()
         .resize({ width: 300 })
         .jpeg({ quality: 80 })
         .toFile(path.join(UPLOADS_DIR, thumb));
@@ -88,7 +128,6 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
 app.get('/exportPhotos', (req, res) => {
   try {
     const data = loadData();
-    // Eksportujemy tylko te, które mają opis + co najmniej 4 zdjęcia:
     const completeItems = data.filter(item =>
       item.description && item.description.trim() !== '' &&
       item.photos && item.photos.length >= 4
@@ -112,7 +151,6 @@ app.get('/exportPhotos', (req, res) => {
           const picName = folderName + `${i + 1}.jpg`;
           zip.file(fullPath, { name: picName });
 
-          // The first photo also goes into "miniaturki/0 (zIndex).jpg"
           if (i === 0) {
             const miniName = `miniaturki/0 (${zIndex}).jpg`;
             zip.file(fullPath, { name: miniName });
@@ -136,32 +174,25 @@ app.get('/exportDescriptions', (req, res) => {
     if (!data.length) {
       return res.status(400).send('Brak danych – nie ma co eksportować.');
     }
-    
-    // Nie tworzymy wiersza nagłówkowego – eksportujemy same dane.
+
     let csv = '';
-    
     data.forEach(item => {
-      // Produkt uznajemy za kompletny, gdy ma niepusty opis i co najmniej 4 zdjęcia.
       if (item.description && item.description.trim() !== '' &&
           item.photos && item.photos.length >= 4) {
         const sku = csvEscape(item.sku || '');
         const title = csvEscape(item.title || '');
         const desc = csvEscape(item.description || '');
         let row = `${sku},${title},${desc}`;
-        
-        // Dodajemy linki do zdjęć w kolejności przechowywanej w item.photos.
         item.photos.forEach(photo => {
           const link = `${req.protocol}://${req.get('host')}/uploads/${photo.full}`;
           row += `,${csvEscape(link)}`;
         });
-        
         csv += row + '\n';
       } else {
-        // Jeśli produkt nie jest kompletny, eksportujemy pustą linię.
         csv += ',,\n';
       }
     });
-    
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename="opisy_complete.csv"');
     res.send(csv);
@@ -292,14 +323,12 @@ app.post('/addThumbnail', upload.single('photo'), async (req, res) => {
     const baseName = path.parse(full).name;
     const thumb = 'thumb_' + baseName + '.jpg';
 
-    // Utwórz miniaturkę (300px szerokości)
     await sharp(file.path)
       .rotate()
       .resize({ width: 300 })
       .jpeg({ quality: 80 })
       .toFile(path.join(UPLOADS_DIR, thumb));
 
-    // Dodaj nowy obiekt zdjęcia na początek listy (jako miniaturkę)
     if (!item.photos) item.photos = [];
     item.photos.unshift({ full, thumb });
 
@@ -311,8 +340,6 @@ app.post('/addThumbnail', upload.single('photo'), async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Błąd serwera przy dodawaniu miniaturki.' });
   }
 });
-
-
 
 // Start server
 const PORT = process.env.PORT || 3000;
