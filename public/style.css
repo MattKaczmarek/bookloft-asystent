@@ -53,7 +53,7 @@
 
 /* Nowy styl dla przycisku Home z białym zarysem */
 :root {
-    --icon-size: 20px; /* Zmienna do łatwej zmiany rozmiaru ikony - dostosuj tę wartość */
+    --icon-size: 24px; /* Zmienna do łatwej zmiany rozmiaru ikony - dostosuj tę wartość */
 }
 .home-button {
     background-color: transparent; /* Brak wypełnienia */
