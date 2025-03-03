@@ -57,6 +57,22 @@ function fetchSheetData() {
                 document.getElementById('kasia-average').textContent = `Średnia: ${formatNumber(data.data.kasia.average)}`;
                 document.getElementById('michal-sum').textContent = `Suma: ${formatNumber(data.data.michal.sum)}`;
                 document.getElementById('michal-average').textContent = `Średnia: ${formatNumber(data.data.michal.average)}`;
+
+                // Logika dla złotej korony
+                const kasiaCrown = document.getElementById('kasia-crown');
+                const michalCrown = document.getElementById('michal-crown');
+                kasiaCrown.innerHTML = ''; // Czyścimy oba kontenery
+                michalCrown.innerHTML = '';
+
+                const kasiaSum = data.data.kasia.sum;
+                const michalSum = data.data.michal.sum;
+
+                if (kasiaSum > michalSum) {
+                    kasiaCrown.innerHTML = '<span class="crown">👑</span>';
+                } else if (michalSum > kasiaSum) {
+                    michalCrown.innerHTML = '<span class="crown">👑</span>';
+                }
+                // Jeśli sumy są równe, korona nie pojawia się nigdzie
             } else {
                 console.error('Błąd w danych:', data.message);
             }
@@ -68,6 +84,10 @@ function fetchSheetData() {
             document.getElementById('kasia-average').textContent = 'Średnia: 0,00';
             document.getElementById('michal-sum').textContent = 'Suma: 0,00';
             document.getElementById('michal-average').textContent = 'Średnia: 0,00';
+
+            // Czyścimy koronę w przypadku błędu
+            document.getElementById('kasia-crown').innerHTML = '';
+            document.getElementById('michal-crown').innerHTML = '';
         });
 }
 
