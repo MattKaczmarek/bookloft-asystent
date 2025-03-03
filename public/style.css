@@ -85,6 +85,21 @@
     height: var(--icon-size); /* Rozmiar ikony kontrolowany przez zmienną */
 }
 
+/* Style dla kontenera i korony */
+.crown-container {
+    display: block;
+    height: 30px; /* Wysokość kontenera – dostosuj, jeśli korona wymaga więcej miejsca */
+    line-height: 1;
+}
+
+.crown {
+    display: inline-block;
+    font-size: 24px; /* Domyślny rozmiar korony – łatwy do zmiany */
+    color: gold; /* Złoty kolor korony */
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.8); /* Subtelny blask */
+    margin-bottom: 5px; /* Odstęp między koroną a tekstem poniżej */
+}
+
 /* Reszta stylów bez zmian */
 * {
   box-sizing: border-box;
