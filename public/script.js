@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('main-app').classList.remove('hidden');
     });
 
+    // Dodana obsługa przycisku "Home" (powrót do ekranu powitalnego)
+    document.getElementById('home-button').addEventListener('click', () => {
+        document.getElementById('main-app').classList.add('hidden');
+        document.getElementById('welcome-screen').classList.remove('hidden');
+    });
+
     // Pobieranie danych z Google Sheets przy załadowaniu strony
     fetchSheetData();
 
@@ -39,10 +45,34 @@ function fetchSheetData() {
         .then(data => {
             if (data.status === 'ok') {
                 // Aktualizacja tabeli powitalnej z pełnymi wartościami i przecinkiem
-                document.getElementById('kasia-sum').textContent = `Suma: ${data.data.kasia.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.getElementById('kasia-average').textContent = `Średnia: ${data.data.kasia.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.getElementById('michal-sum').textContent = `Suma: ${data.data.michal.sum.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                document.getElementById('michal-average').textContent = `Średnia: ${data.data.michal.average.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                const formatNumber = (num) => {
+                    return num.toLocaleString('pl-PL', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                };
+
+                // Aktualizacja tabeli powitalnej
+                document.getElementById('kasia-sum').textContent = `Suma: ${formatNumber(data.data.kasia.sum)}`;
+                document.getElementById('kasia-average').textContent = `Średnia: ${formatNumber(data.data.kasia.average)}`;
+                document.getElementById('michal-sum').textContent = `Suma: ${formatNumber(data.data.michal.sum)}`;
+                document.getElementById('michal-average').textContent = `Średnia: ${formatNumber(data.data.michal.average)}`;
+
+                // Logika dla złotej korony
+                const kasiaCrown = document.getElementById('kasia-crown');
+                const michalCrown = document.getElementById('michal-crown');
+                kasiaCrown.innerHTML = ''; // Czyścimy oba kontenery
+                michalCrown.innerHTML = '';
+
+                const kasiaSum = data.data.kasia.sum;
+                const michalSum = data.data.michal.sum;
+
+                if (kasiaSum > michalSum) {
+                    kasiaCrown.innerHTML = '<span class="crown">👑</span>';
+                } else if (michalSum > kasiaSum) {
+                    michalCrown.innerHTML = '<span class="crown">👑</span>';
+                }
+                // Jeśli sumy są równe, korona nie pojawia się nigdzie
             } else {
                 console.error('Błąd w danych:', data.message);
             }
@@ -54,6 +84,10 @@ function fetchSheetData() {
             document.getElementById('kasia-average').textContent = 'Średnia: 0,00';
             document.getElementById('michal-sum').textContent = 'Suma: 0,00';
             document.getElementById('michal-average').textContent = 'Średnia: 0,00';
+
+            // Czyścimy koronę w przypadku błędu
+            document.getElementById('kasia-crown').innerHTML = '';
+            document.getElementById('michal-crown').innerHTML = '';
         });
 }
 

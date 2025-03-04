@@ -51,6 +51,55 @@
     transform: scale(0.98);
 }
 
+/* Nowy styl dla przycisku Home z białym zarysem */
+:root {
+    --icon-size: 24px; /* Zmienna do łatwej zmiany rozmiaru ikony - dostosuj tę wartość */
+}
+.home-button {
+    background-color: transparent; /* Brak wypełnienia */
+    border: 2px solid #fff; /* Biały zarys */
+    color: #fff;
+    padding: 8px; /* Padding dla ikony */
+    cursor: pointer;
+    transition: border-color 0.3s, transform 0.1s, box-shadow 0.3s;
+    font-size: 1rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: calc(var(--icon-size) + 16px); /* Elastyczny rozmiar z paddingiem */
+    min-height: calc(var(--icon-size) + 16px); /* Elastyczny rozmiar z paddingiem */
+}
+
+.home-button:hover {
+    border-color: #ddd; /* Lekko jaśniejszy zarys przy hover */
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3); /* Subtelny cień */
+}
+
+.home-button:active {
+    transform: scale(0.98);
+}
+
+.home-button svg {
+    width: var(--icon-size); /* Rozmiar ikony kontrolowany przez zmienną */
+    height: var(--icon-size); /* Rozmiar ikony kontrolowany przez zmienną */
+}
+
+/* Style dla kontenera i korony */
+.crown-container {
+    display: block;
+    height: 30px; /* Wysokość kontenera – dostosuj, jeśli korona wymaga więcej miejsca */
+    line-height: 1;
+}
+
+.crown {
+    display: inline-block;
+    font-size: 24px; /* Domyślny rozmiar korony – łatwy do zmiany */
+    color: gold; /* Złoty kolor korony */
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.8); /* Subtelny blask */
+    margin-bottom: 5px; /* Odstęp między koroną a tekstem poniżej */
+}
+
 /* Reszta stylów bez zmian */
 * {
   box-sizing: border-box;
@@ -223,7 +272,7 @@ main {
   border: none;
   cursor: pointer;
   font-size: 14px;
-  padding: 2px 5px;
+  padding: 2px 15px;
   z-index: 2;
   opacity: 0.8;
   border-radius: 3px;
@@ -278,6 +327,10 @@ main {
     width: auto !important;
     white-space: pre-wrap;
     overflow-wrap: break-word;
+  }
+  /* Nowy przycisk Home jest widoczny na telefonach */
+  #home-button {
+    display: flex !important;
   }
 }
 
