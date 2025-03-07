@@ -1,6 +1,7 @@
 let socket;
 let isDataImported = false;
 let isAppInitialized = false;
+let isLoggedIn = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Sprawdź status sesji przy ładowaniu strony
@@ -24,6 +25,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Obsługa wylogowania
     document.getElementById('logout-button').addEventListener('click', handleLogout);
+    
+    // Dodana obsługa przycisku "Zdjęcia" - bez sprawdzania sesji
+    document.getElementById('photos-button').addEventListener('click', function() {
+        showMainApp();
+    });
+
+    // Dodana obsługa przycisku "Home" (powrót do ekranu powitalnego)
+    document.getElementById('home-button').addEventListener('click', function() {
+        showWelcomeScreen();
+    });
 });
 
 // Funkcja sprawdzająca status sesji
@@ -32,25 +43,33 @@ function checkSession() {
         .then(response => response.json())
         .then(data => {
             if (data.authenticated) {
-                // Użytkownik jest zalogowany, inicjalizuj aplikację
-                initializeApp();
+                // Użytkownik jest zalogowany
+                isLoggedIn = true;
+                
+                // Inicjalizacja tylko raz
+                if (!isAppInitialized) {
+                    initializeApp();
+                }
+                
                 // Połącz z Socket.IO
                 initializeSocketConnection();
+                
                 // Pokaż ekran powitalny
-                showApp();
+                showWelcomeScreen();
+                
+                // Pobierz dane z Google Sheets
+                fetchSheetData();
             } else {
                 // Użytkownik nie jest zalogowany, pokaż ekran logowania
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('welcome-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.add('hidden');
+                isLoggedIn = false;
+                showLoginScreen();
             }
         })
         .catch(error => {
             console.error('Błąd sprawdzania sesji:', error);
             // W przypadku błędu, załóż że użytkownik nie jest zalogowany
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('welcome-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.add('hidden');
+            isLoggedIn = false;
+            showLoginScreen();
         });
 }
 
@@ -81,12 +100,22 @@ function handleLogin() {
         return response.json();
     })
     .then(data => {
-        // Logowanie udane, inicjalizuj aplikację
-        initializeApp();
+        // Logowanie udane
+        isLoggedIn = true;
+        
+        // Inicjalizacja tylko raz
+        if (!isAppInitialized) {
+            initializeApp();
+        }
+        
         // Połącz z Socket.IO
         initializeSocketConnection();
+        
         // Pokaż ekran powitalny
-        showApp();
+        showWelcomeScreen();
+        
+        // Pobierz dane z Google Sheets
+        fetchSheetData();
     })
     .catch(error => {
         document.getElementById('login-error').textContent = error.message || 'Nieprawidłowy login lub hasło';
@@ -99,10 +128,11 @@ function handleLogout() {
         method: 'POST'
     })
     .then(() => {
-        // Wylogowanie udane, pokaż ekran logowania
-        document.getElementById('login-screen').classList.remove('hidden');
-        document.getElementById('welcome-screen').classList.add('hidden');
-        document.getElementById('main-app').classList.add('hidden');
+        // Wylogowanie udane
+        isLoggedIn = false;
+        
+        // Pokaż ekran logowania
+        showLoginScreen();
         
         // Wyczyść pola formularza
         document.getElementById('username').value = '';
@@ -124,18 +154,48 @@ function handleLogout() {
     });
 }
 
-// Funkcja pokazująca aplikację po zalogowaniu
-function showApp() {
+// Funkcja pokazująca ekran logowania
+function showLoginScreen() {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('welcome-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.add('hidden');
+}
+
+// Funkcja pokazująca ekran powitalny
+function showWelcomeScreen() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('welcome-screen').classList.remove('hidden');
     document.getElementById('main-app').classList.add('hidden');
+}
+
+// Funkcja pokazująca główny ekran aplikacji
+function showMainApp() {
+    if (!isLoggedIn) {
+        showLoginScreen();
+        document.getElementById('login-error').textContent = 'Sesja wygasła. Zaloguj się ponownie.';
+        return;
+    }
     
-    // Pobierz dane z Google Sheets
-    fetchSheetData();
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('welcome-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    
+    // Upewniamy się, że dane są załadowane
+    if (socket && socket.connected) {
+        socket.emit('getData');
+    }
 }
 
 // Inicjalizacja połączenia socket.io
 function initializeSocketConnection() {
+    // Jeśli już mamy połączenie, nie twórz nowego
+    if (socket && socket.connected) return;
+    
+    // Rozłącz stare połączenie, jeśli istnieje
+    if (socket) {
+        socket.disconnect();
+    }
+    
     socket = io({
         reconnectionAttempts: 5,
         timeout: 10000
@@ -154,50 +214,31 @@ function initializeSocketConnection() {
         
         // Jeśli błąd dotyczy autoryzacji, przekieruj do ekranu logowania
         if (error.message.includes('Nieautoryzowany') || error.message.includes('Unauthorized')) {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('welcome-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.add('hidden');
-            
-            // Wyświetl komunikat o błędzie
+            isLoggedIn = false;
+            showLoginScreen();
             document.getElementById('login-error').textContent = 'Sesja wygasła. Zaloguj się ponownie.';
         }
     });
 }
 
 function initializeApp() {
-    // Inicjalizuj aplikację tylko raz
-    if (isAppInitialized) return;
+    // Zaznacz, że aplikacja została zainicjalizowana
     isAppInitialized = true;
     
-    // Dodana obsługa przycisku "Zdjęcia"
-    document.getElementById('photos-button').addEventListener('click', function() {
-        // Bezpośrednio przełączamy widoki bez sprawdzania sesji
-        document.getElementById('welcome-screen').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        
-        // Upewniamy się, że dane są załadowane
-        if (socket && socket.connected) {
-            socket.emit('getData');
-        }
-    });
-
-    // Dodana obsługa przycisku "Home" (powrót do ekranu powitalnego)
-    document.getElementById('home-button').addEventListener('click', () => {
-        document.getElementById('main-app').classList.add('hidden');
-        document.getElementById('welcome-screen').classList.remove('hidden');
-    });
-    
+    // Wszystkie zdarzenia przycisków są już ustawione w DOMContentLoaded
     setupButtonListeners();
 }
 
 function fetchSheetData() {
+    // Jeśli nie jesteśmy zalogowani, nie próbuj pobierać danych
+    if (!isLoggedIn) return;
+    
     fetch('/getSheetData')
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
                     console.error('Błąd autoryzacji przy pobieraniu danych z arkusza');
-                    // Nie przekierowujemy automatycznie do ekranu logowania
-                    // Zamiast tego, ustawiamy domyślne wartości
+                    // Ustawiamy domyślne wartości, ale nie przekierowujemy do logowania
                     throw new Error('Błąd autoryzacji');
                 }
                 throw new Error('Błąd pobierania danych z arkusza.');
