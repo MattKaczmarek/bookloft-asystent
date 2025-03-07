@@ -14,7 +14,32 @@
     <script src="https://cdn.jsdelivr.net/npm/jszip/dist/jszip.min.js"></script>
 </head>
 <body class="font-sans">
-    <div id="welcome-screen" class="welcome-screen">
+    <!-- Ekran logowania -->
+    <div id="login-screen" class="login-screen">
+        <div class="login-content">
+            <h1 class="login-title">BookLoft</h1>
+            <h2 class="login-subtitle">Asystent Zdjęć</h2>
+            <div class="login-form">
+                <div class="form-group">
+                    <label for="username">Login</label>
+                    <input type="text" id="username" placeholder="Wprowadź login" autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Hasło</label>
+                    <input type="password" id="password" placeholder="Wprowadź hasło" autocomplete="current-password">
+                </div>
+                <div class="form-group remember-me">
+                    <input type="checkbox" id="remember-me">
+                    <label for="remember-me">Zapamiętaj mnie</label>
+                </div>
+                <div class="login-error" id="login-error"></div>
+                <button id="login-button" class="login-button">Zaloguj się</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ekran powitalny -->
+    <div id="welcome-screen" class="welcome-screen hidden">
         <div class="welcome-content">
             <table class="stats-table">
                 <thead>
@@ -58,6 +83,7 @@
                     <button id="export-descriptions-button">Eksport opisów</button>
                     <button id="export-photos-button">Eksport zdjęć</button>
                     <button id="clear-data-button">Wyczyść dane</button>
+                    <button id="logout-button">Wyloguj</button>
                     <div class="counters">
                         <div id="counter-complete">Gotowe: 0</div>
                         <div id="counter-incomplete">Niekompletne: 0</div>
