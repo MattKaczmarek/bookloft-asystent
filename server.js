@@ -114,11 +114,13 @@ fixUserPasswords();
 // Konfiguracja sesji
 const sessionMiddleware = session({
   secret: 'bookloft-secret-key',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
+  rolling: true, // Odświeża czas wygaśnięcia sesji przy każdym żądaniu
   cookie: { 
     secure: process.env.NODE_ENV === 'production', // Używaj HTTPS w produkcji
-    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 dni
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dni
+    httpOnly: true
   }
 });
 
@@ -130,10 +132,15 @@ io.use(wrap(sessionMiddleware));
 
 // Sprawdzanie autoryzacji w Socket.IO
 io.use((socket, next) => {
-  if (socket.request.session && socket.request.session.authenticated) {
-    next();
-  } else {
-    next(new Error('Nieautoryzowany dostęp'));
+  try {
+    if (socket.request.session && socket.request.session.authenticated) {
+      next();
+    } else {
+      next(new Error('Nieautoryzowany dostęp'));
+    }
+  } catch (error) {
+    console.error('Błąd sprawdzania sesji w Socket.IO:', error);
+    next(new Error('Błąd sesji'));
   }
 });
 
