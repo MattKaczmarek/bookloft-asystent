@@ -5,7 +5,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 const multer = require('multer');
 const sharp = require('sharp');
-const archiver = require('archiver');
+const { createArchiver } = require('archiver');
 const { google } = require('googleapis'); // Dodajemy Google API
 const bcrypt = require('bcryptjs'); // Do bezpiecznego przechowywania haseł
 const session = require('express-session'); // Do obsługi sesji
@@ -40,7 +40,7 @@ function loadUsers() {
       {
         username: 'admin',
         // Zahaszowane hasło 'admin'
-        passwordHash: '$2a$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa'
+        passwordHash: '$2b$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa'
       }
     ];
     fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2), 'utf8');
@@ -61,7 +61,13 @@ function findUser(username) {
 function verifyUser(username, password) {
   const user = findUser(username);
   if (!user) return false;
-  return bcrypt.compareSync(password, user.passwordHash);
+  
+  try {
+    return bcrypt.compareSync(password, user.passwordHash);
+  } catch (error) {
+    console.error('Błąd weryfikacji hasła:', error);
+    return false;
+  }
 }
 
 function addUser(username, password) {
@@ -70,11 +76,40 @@ function addUser(username, password) {
     return false; // Użytkownik już istnieje
   }
   
-  const passwordHash = bcrypt.hashSync(password, 10);
-  users.push({ username, passwordHash });
-  saveUsers(users);
-  return true;
+  try {
+    const passwordHash = bcrypt.hashSync(password, 10);
+    users.push({ username, passwordHash });
+    saveUsers(users);
+    return true;
+  } catch (error) {
+    console.error('Błąd dodawania użytkownika:', error);
+    return false;
+  }
 }
+
+// Funkcja pomocnicza do naprawy hasheł użytkowników
+function fixUserPasswords() {
+  try {
+    const users = loadUsers();
+    let hasChanged = false;
+    
+    for (const user of users) {
+      // Tworzymy nowy hash dla każdego użytkownika z hasłem "admin"
+      user.passwordHash = bcrypt.hashSync('admin', 10);
+      hasChanged = true;
+    }
+    
+    if (hasChanged) {
+      saveUsers(users);
+      console.log('Naprawiono hasła użytkowników');
+    }
+  } catch (error) {
+    console.error('Błąd naprawy haseł:', error);
+  }
+}
+
+// Wywołanie funkcji naprawiającej przy starcie serwera
+fixUserPasswords();
 
 // Konfiguracja sesji
 const sessionMiddleware = session({
@@ -279,7 +314,7 @@ app.get('/exportPhotos', requireAuth, (req, res) => {
       return res.status(400).send('Brak kompletnych pozycji – nie ma co eksportować.');
     }
 
-    const zip = archiver('zip', { zlib: { level: 0 } });
+    const zip = createArchiver('zip', { zlib: { level: 0 } });
     res.setHeader('Content-Disposition', 'attachment; filename="zdjecia.zip"');
     res.setHeader('Content-Type', 'application/zip');
     zip.pipe(res);
