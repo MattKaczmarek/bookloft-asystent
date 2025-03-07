@@ -60,12 +60,19 @@ function findUser(username) {
 
 function verifyUser(username, password) {
   const user = findUser(username);
-  if (!user) return false;
+  console.log(`Próba logowania dla użytkownika: ${username}`);
+  
+  if (!user) {
+    console.log(`Użytkownik ${username} nie znaleziony`);
+    return false;
+  }
   
   try {
-    return bcrypt.compareSync(password, user.passwordHash);
+    const result = bcrypt.compareSync(password, user.passwordHash);
+    console.log(`Weryfikacja hasła dla ${username}: ${result ? 'sukces' : 'niepowodzenie'}`);
+    return result;
   } catch (error) {
-    console.error('Błąd weryfikacji hasła:', error);
+    console.error(`Błąd weryfikacji hasła dla ${username}:`, error);
     return false;
   }
 }
@@ -118,7 +125,7 @@ const sessionMiddleware = session({
   saveUninitialized: true,
   rolling: true, // Odświeża czas wygaśnięcia sesji przy każdym żądaniu
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // Używaj HTTPS w produkcji
+    secure: false, // Ustaw na true jeśli używasz HTTPS
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 dni
     httpOnly: true
   }
@@ -162,6 +169,8 @@ app.use(express.json());
 app.post('/api/login', (req, res) => {
   const { username, password, remember } = req.body;
   
+  console.log(`Próba logowania dla użytkownika: ${username}`);
+  
   if (verifyUser(username, password)) {
     req.session.authenticated = true;
     req.session.username = username;
@@ -171,22 +180,35 @@ app.post('/api/login', (req, res) => {
       req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; // 1 rok
     }
     
+    console.log(`Logowanie udane dla użytkownika: ${username}`);
+    console.log(`Stan sesji po logowaniu:`, req.session);
+    
     res.json({ status: 'ok' });
   } else {
+    console.log(`Logowanie nieudane dla użytkownika: ${username}`);
     res.status(401).json({ status: 'error', message: 'Nieprawidłowy login lub hasło' });
   }
 });
 
 // Endpoint wylogowania
 app.post('/api/logout', (req, res) => {
+  const username = req.session.username;
+  console.log(`Wylogowanie użytkownika: ${username}`);
+  
   req.session.destroy();
   res.json({ status: 'ok' });
 });
 
 // Endpoint sprawdzania statusu sesji
 app.get('/api/session', (req, res) => {
-  if (req.session && req.session.authenticated) {
-    res.json({ status: 'ok', authenticated: true, username: req.session.username });
+  const isAuthenticated = !!(req.session && req.session.authenticated);
+  const username = isAuthenticated ? req.session.username : null;
+  
+  console.log(`Sprawdzenie sesji - zalogowany: ${isAuthenticated}, użytkownik: ${username}`);
+  
+  if (isAuthenticated) {
+    console.log(`Stan sesji:`, req.session);
+    res.json({ status: 'ok', authenticated: true, username });
   } else {
     res.json({ status: 'ok', authenticated: false });
   }
