@@ -136,7 +136,10 @@ function showApp() {
 
 // Inicjalizacja połączenia socket.io
 function initializeSocketConnection() {
-    socket = io();
+    socket = io({
+        reconnectionAttempts: 5,
+        timeout: 10000
+    });
 
     socket.on('dataUpdate', (data) => {
         renderTable(data);
@@ -167,9 +170,15 @@ function initializeApp() {
     isAppInitialized = true;
     
     // Dodana obsługa przycisku "Zdjęcia"
-    document.getElementById('photos-button').addEventListener('click', () => {
+    document.getElementById('photos-button').addEventListener('click', function() {
+        // Bezpośrednio przełączamy widoki bez sprawdzania sesji
         document.getElementById('welcome-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
+        
+        // Upewniamy się, że dane są załadowane
+        if (socket && socket.connected) {
+            socket.emit('getData');
+        }
     });
 
     // Dodana obsługa przycisku "Home" (powrót do ekranu powitalnego)
@@ -186,11 +195,10 @@ function fetchSheetData() {
         .then(response => {
             if (!response.ok) {
                 if (response.status === 401) {
-                    // Jeśli błąd 401 (Unauthorized), przekieruj do ekranu logowania
-                    document.getElementById('login-screen').classList.remove('hidden');
-                    document.getElementById('welcome-screen').classList.add('hidden');
-                    document.getElementById('main-app').classList.add('hidden');
-                    throw new Error('Sesja wygasła. Zaloguj się ponownie.');
+                    console.error('Błąd autoryzacji przy pobieraniu danych z arkusza');
+                    // Nie przekierowujemy automatycznie do ekranu logowania
+                    // Zamiast tego, ustawiamy domyślne wartości
+                    throw new Error('Błąd autoryzacji');
                 }
                 throw new Error('Błąd pobierania danych z arkusza.');
             }
