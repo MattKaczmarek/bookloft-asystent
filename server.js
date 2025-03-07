@@ -7,9 +7,12 @@ const multer = require('multer');
 const sharp = require('sharp');
 const archiver = require('archiver');
 const { google } = require('googleapis'); // Dodajemy Google API
+const bcrypt = require('bcryptjs'); // Do bezpiecznego przechowywania haseł
+const session = require('express-session'); // Do obsługi sesji
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const USERS_FILE = path.join(__dirname, 'users.json');
 
 const app = express();
 const server = http.createServer(app);
@@ -29,11 +32,142 @@ function saveData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
+// Funkcje do obsługi użytkowników
+function loadUsers() {
+  if (!fs.existsSync(USERS_FILE)) {
+    // Domyślny użytkownik admin/admin jeśli plik nie istnieje
+    const defaultUsers = [
+      {
+        username: 'admin',
+        // Zahaszowane hasło 'admin'
+        passwordHash: '$2a$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa'
+      }
+    ];
+    fs.writeFileSync(USERS_FILE, JSON.stringify(defaultUsers, null, 2), 'utf8');
+    return defaultUsers;
+  }
+  return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+}
+
+function saveUsers(users) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+}
+
+function findUser(username) {
+  const users = loadUsers();
+  return users.find(user => user.username === username);
+}
+
+function verifyUser(username, password) {
+  const user = findUser(username);
+  if (!user) return false;
+  return bcrypt.compareSync(password, user.passwordHash);
+}
+
+function addUser(username, password) {
+  const users = loadUsers();
+  if (users.some(user => user.username === username)) {
+    return false; // Użytkownik już istnieje
+  }
+  
+  const passwordHash = bcrypt.hashSync(password, 10);
+  users.push({ username, passwordHash });
+  saveUsers(users);
+  return true;
+}
+
+// Konfiguracja sesji
+const sessionMiddleware = session({
+  secret: 'bookloft-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // Używaj HTTPS w produkcji
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 dni
+  }
+});
+
+app.use(sessionMiddleware);
+
+// Integracja sesji Express z Socket.IO
+const wrap = middleware => (socket, next) => middleware(socket.request, {}, next);
+io.use(wrap(sessionMiddleware));
+
+// Sprawdzanie autoryzacji w Socket.IO
+io.use((socket, next) => {
+  if (socket.request.session && socket.request.session.authenticated) {
+    next();
+  } else {
+    next(new Error('Nieautoryzowany dostęp'));
+  }
+});
+
+// Middleware do sprawdzania autoryzacji
+function requireAuth(req, res, next) {
+  if (req.session && req.session.authenticated) {
+    return next();
+  }
+  res.status(401).json({ status: 'error', message: 'Nieautoryzowany dostęp' });
+}
+
 // Serve static files (public + uploads)
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
+
+// Endpoint logowania
+app.post('/api/login', (req, res) => {
+  const { username, password, remember } = req.body;
+  
+  if (verifyUser(username, password)) {
+    req.session.authenticated = true;
+    req.session.username = username;
+    
+    if (remember) {
+      // Jeśli "zapamiętaj mnie" jest zaznaczone, ustaw dłuższy czas życia ciasteczka
+      req.session.cookie.maxAge = 365 * 24 * 60 * 60 * 1000; // 1 rok
+    }
+    
+    res.json({ status: 'ok' });
+  } else {
+    res.status(401).json({ status: 'error', message: 'Nieprawidłowy login lub hasło' });
+  }
+});
+
+// Endpoint wylogowania
+app.post('/api/logout', (req, res) => {
+  req.session.destroy();
+  res.json({ status: 'ok' });
+});
+
+// Endpoint sprawdzania statusu sesji
+app.get('/api/session', (req, res) => {
+  if (req.session && req.session.authenticated) {
+    res.json({ status: 'ok', authenticated: true, username: req.session.username });
+  } else {
+    res.json({ status: 'ok', authenticated: false });
+  }
+});
+
+// Endpoint dodawania użytkownika (tylko dla admina)
+app.post('/api/users', requireAuth, (req, res) => {
+  const { username, password } = req.body;
+  
+  if (!username || !password) {
+    return res.status(400).json({ status: 'error', message: 'Brak wymaganych danych' });
+  }
+  
+  if (req.session.username !== 'admin') {
+    return res.status(403).json({ status: 'error', message: 'Tylko administrator może dodawać użytkowników' });
+  }
+  
+  if (addUser(username, password)) {
+    res.json({ status: 'ok' });
+  } else {
+    res.status(400).json({ status: 'error', message: 'Użytkownik już istnieje' });
+  }
+});
 
 // ------------------- File upload + thumbnail -------------------
 const storage = multer.diskStorage({
@@ -54,7 +188,7 @@ const sheets = google.sheets({
   auth: 'AIzaSyAgrOsPIF924YXYq-_TZVPeNZ89rRjpWuo', // Twój klucz API wstawiony bezpośrednio
 });
 
-app.get('/getSheetData', async (req, res) => {
+app.get('/getSheetData', requireAuth, async (req, res) => {
   try {
     const spreadsheetId = '14HLypb1M8o3DKWof6a0yCuJ2NE3am6d77spO9NTyALY'; // Zapamiętane ID arkusza
     const range = 'A1:D3'; // Zakres z screena
@@ -96,7 +230,7 @@ app.get('/getSheetData', async (req, res) => {
   }
 });
 
-app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
+app.post('/addPhotos', requireAuth, upload.array('photos[]'), async (req, res) => {
   try {
     const id = parseInt(req.body.id, 10);
     if (!id) {
@@ -133,7 +267,7 @@ app.post('/addPhotos', upload.array('photos[]'), async (req, res) => {
 });
 
 // ------------------- Export PHOTOS -------------------
-app.get('/exportPhotos', (req, res) => {
+app.get('/exportPhotos', requireAuth, (req, res) => {
   try {
     const data = loadData();
     const completeItems = data.filter(item =>
@@ -176,7 +310,7 @@ app.get('/exportPhotos', (req, res) => {
 });
 
 // ------------------- Export DESCRIPTIONS to CSV -------------------
-app.get('/exportDescriptions', (req, res) => {
+app.get('/exportDescriptions', requireAuth, (req, res) => {
   try {
     const data = loadData();
     if (!data.length) {

@@ -1,0 +1,18 @@
+[
+  {
+    "username": "admin",
+    "passwordHash": "$2a$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa"
+  },
+  {
+    "username": "Michał",
+    "passwordHash": "$2a$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa"
+  },
+  {
+    "username": "Kasia",
+    "passwordHash": "$2a$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa"
+  },
+  {
+    "username": "Madzia",
+    "passwordHash": "$2a$10$ywh1O8LZJpqPfvJdWhQQAuAFR3r.vXMe0Euke3Kx2uXKUVG4YhJAa"
+  }
+] 

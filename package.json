@@ -1,7 +1,7 @@
 {
-  "name": "bookloft-node",
+  "name": "bookloft-asystent",
   "version": "1.0.0",
-  "description": "BookLoft - Node.js + Socket.IO",
+  "description": "Asystent zdjęć dla BookLoft",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,10 +10,16 @@
   "author": "Moje Imię",
   "license": "ISC",
   "dependencies": {
-    "archiver": "^7.0.1",
+    "archiver": "^5.3.1",
+    "bcryptjs": "^2.4.3",
     "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "googleapis": "^118.0.0",
     "multer": "^1.4.5-lts.1",
-    "sharp": "^0.33.5",
-    "socket.io": "^4.5.4"
+    "sharp": "^0.32.1",
+    "socket.io": "^4.6.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
